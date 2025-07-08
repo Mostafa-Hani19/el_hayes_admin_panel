@@ -12,6 +12,7 @@ import '../widgets/sidebar_menu.dart';
 import '../utils/constants.dart';
 
 class OrderDetailsScreen extends StatefulWidget {
+  static const String routeName = '/order_details';
   final String orderId;
   const OrderDetailsScreen({super.key, required this.orderId});
 
@@ -120,7 +121,12 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Order Details'),
-        automaticallyImplyLeading: false,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            Navigator.pushReplacementNamed(context, Constants.ordersRoute);
+          },
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.print),
@@ -159,6 +165,10 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
                         style: pw.TextStyle(font: ttf),
                       ),
                       pw.Text(
+                        'Phone: ${_order!['phone'] ?? ''}',
+                        style: pw.TextStyle(font: ttf),
+                      ),
+                      pw.Text(
                         'Address: ${_order!['address'] ?? ''}',
                         style: pw.TextStyle(font: ttf),
                         textDirection: pw.TextDirection.rtl,
@@ -183,9 +193,10 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
                         border: pw.TableBorder.all(),
                         columnWidths: {
                           0: const pw.FlexColumnWidth(2), // Product
-                          1: const pw.FlexColumnWidth(1), // Qty
-                          2: const pw.FlexColumnWidth(1), // Price
-                          3: const pw.FlexColumnWidth(1), // Subtotal
+                          1: const pw.FlexColumnWidth(1), // Code
+                          2: const pw.FlexColumnWidth(1), // Qty
+                          3: const pw.FlexColumnWidth(1), // Price
+                          4: const pw.FlexColumnWidth(1), // Subtotal
                         },
                         children: [
                           pw.TableRow(
@@ -195,6 +206,15 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
                                 alignment: pw.Alignment.centerRight,
                                 child: pw.Text(
                                   'Product',
+                                  style: pw.TextStyle(font: ttf, fontWeight: pw.FontWeight.bold),
+                                  textAlign: pw.TextAlign.center,
+                                ),
+                              ),
+                              pw.Container(
+                                padding: const pw.EdgeInsets.all(4),
+                                alignment: pw.Alignment.center,
+                                child: pw.Text(
+                                  'Code',
                                   style: pw.TextStyle(font: ttf, fontWeight: pw.FontWeight.bold),
                                   textAlign: pw.TextAlign.center,
                                 ),
@@ -231,6 +251,7 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
                           ..._items.map((item) {
                             final product = item['products'];
                             final name = product?['name'] ?? '';
+                            final code = product?['code'] ?? '';
                             final quantity = item['quantity'] ?? 0;
                             final price = item['price'] ?? 0;
                             final subtotal = price * quantity;
@@ -243,6 +264,14 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
                                     name,
                                     style: pw.TextStyle(font: ttf),
                                     textDirection: pw.TextDirection.rtl,
+                                  ),
+                                ),
+                                pw.Container(
+                                  padding: const pw.EdgeInsets.all(4),
+                                  alignment: pw.Alignment.center,
+                                  child: pw.Text(
+                                    code,
+                                    style: pw.TextStyle(font: ttf),
                                   ),
                                 ),
                                 pw.Container(
@@ -271,7 +300,7 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
                                 ),
                               ],
                             );
-                          }).toList(),
+                          }),
                         ],
                       ),
                       pw.SizedBox(height: 16),
@@ -435,6 +464,12 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
               theme,
             ),
             _buildInfoRow(
+              Icons.phone,
+              'Phone: ',
+              _order!['phone'] ?? '',
+              theme,
+            ),
+            _buildInfoRow(
               Icons.location_on,
               'Address: ',
               _order!['address'] ?? '',
@@ -570,6 +605,12 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
                     ),
                     Expanded(
                       child: Text(
+                        'Code',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                    Expanded(
+                      child: Text(
                         'Quantity',
                         style: TextStyle(fontWeight: FontWeight.bold),
                       ),
@@ -592,6 +633,7 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
                 ..._items.map((item) {
                   final product = item['products'];
                   final name = product?['name'] ?? '';
+                  final code = product?['code'] ?? '';
                   final imageUrl = product?['image_url'] ?? '';
                   final quantity = item['quantity'] ?? 0;
                   final price = item['price'] ?? 0;
@@ -624,6 +666,12 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
                             ],
                           ),
                         ),
+                        Expanded(
+                          child: Text(
+                            code,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
                         Expanded(child: Text(quantity.toString())),
                         Expanded(
                           child: Text('EGP ${price.toStringAsFixed(2)}'),
@@ -634,7 +682,7 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
                       ],
                     ),
                   );
-                }).toList(),
+                }),
               ],
             ),
           ),

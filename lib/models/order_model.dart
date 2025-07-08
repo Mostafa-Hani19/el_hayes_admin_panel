@@ -1,31 +1,37 @@
 class Order {
   final String id;
   final String userId;
+  final String name;
   final String address;
   final String phone;
   final String status;
   final DateTime createdAt;
   final List<OrderItem> items;
+  final bool isSeen;
 
   Order({
     required this.id,
     required this.userId,
+    required this.name,
     required this.address,
     required this.phone,
     required this.status,
     required this.createdAt,
     required this.items,
+    required this.isSeen,
   });
 
   factory Order.fromJson(Map<String, dynamic> json, List<OrderItem> items) {
     return Order(
       id: json['id'],
       userId: json['user_id'],
+      name: json['name'] ?? '',
       address: json['address'] ?? '',
       phone: json['phone'] ?? '',
       status: json['status'] ?? '',
       createdAt: DateTime.parse(json['created_at']),
       items: items,
+      isSeen: json['is_seen'] ?? false,
     );
   }
 }

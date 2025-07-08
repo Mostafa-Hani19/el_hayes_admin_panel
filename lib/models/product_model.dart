@@ -6,7 +6,8 @@ class Product {
   final double price;
   final String categoryId;
   final DateTime createdAt;
-  final bool isAvailable; 
+  final bool isAvailable;
+  final String code;
 
   Product({
     required this.id,
@@ -17,6 +18,7 @@ class Product {
     required this.categoryId,
     required this.createdAt,
     required this.isAvailable,
+    required this.code,
   });
 
   factory Product.fromJson(Map<String, dynamic> json) {
@@ -32,7 +34,8 @@ class Product {
               : double.tryParse(json['price']?.toString() ?? '0.0') ?? 0.0,
       categoryId: json['category_id']?.toString() ?? '',
       createdAt: DateTime.tryParse(json['created_at'] ?? '') ?? DateTime.now(),
-      isAvailable: json['is_available'] ?? true, 
+      isAvailable: json['is_available'] ?? true,
+      code: json['code']?.toString() ?? '',
     );
   }
 
@@ -45,7 +48,8 @@ class Product {
       'price': price,
       'category_id': categoryId,
       'created_at': createdAt.toIso8601String(),
-      'is_available': isAvailable, 
+      'is_available': isAvailable,
+      'code': code,
     };
   }
 }

@@ -86,7 +86,8 @@ class _ProductsScreenState extends State<ProductsScreen> {
     return _products.where((p) {
       final matchesSearch = _searchQuery.isEmpty ||
           p.name.toLowerCase().contains(_searchQuery) ||
-          p.description.toLowerCase().contains(_searchQuery);
+          p.description.toLowerCase().contains(_searchQuery) ||
+          p.code.toLowerCase().contains(_searchQuery);
       final matchesCategory = _categoryFilter == 'all' || p.categoryId == _categoryFilter;
       final matchesAvailability = _availabilityFilter == 'all' ||
           (_availabilityFilter == 'available' && p.isAvailable) ||
@@ -110,10 +111,27 @@ class _ProductsScreenState extends State<ProductsScreen> {
   Widget build(BuildContext context) {
     final isMobile = Constants.isMobile(context);
     final isTablet = Constants.isTablet(context);
-    final maxContentWidth = 900.0;
+    final isDesktop = Constants.isDesktop(context);
+    double maxContentWidth = isMobile
+        ? double.infinity
+        : isTablet
+            ? 700
+            : 1100;
+    double horizontalPadding = isMobile
+        ? 4.0
+        : isTablet
+            ? 16.0
+            : 32.0;
+    double verticalPadding = isMobile
+        ? 4.0
+        : isTablet
+            ? 8.0
+            : 24.0;
     return Scaffold(
       appBar: AppBar(
         title: const Text('Products'),
+        automaticallyImplyLeading: false,
+        leading: isMobile ? const SidebarMenu() : null,
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
@@ -124,8 +142,8 @@ class _ProductsScreenState extends State<ProductsScreen> {
       drawer: isMobile ? const SidebarMenu() : null,
       floatingActionButton: FloatingActionButton(
         onPressed: _showAddProductDialog,
-        child: const Icon(Icons.add),
         tooltip: 'Add Product',
+        child: const Icon(Icons.add),
       ),
       body: LayoutBuilder(
         builder: (context, constraints) {
@@ -137,12 +155,12 @@ class _ProductsScreenState extends State<ProductsScreen> {
                 child: Center(
                   child: ConstrainedBox(
                     constraints: BoxConstraints(
-                      maxWidth: isMobile ? double.infinity : maxContentWidth,
+                      maxWidth: maxContentWidth,
                     ),
                     child: Padding(
                       padding: EdgeInsets.symmetric(
-                        horizontal: isMobile ? 4.0 : 24.0,
-                        vertical: isMobile ? 4.0 : 16.0,
+                        horizontal: horizontalPadding,
+                        vertical: verticalPadding,
                       ),
                       child: _isLoading
                           ? const Center(child: CircularProgressIndicator())
@@ -153,64 +171,15 @@ class _ProductsScreenState extends State<ProductsScreen> {
                                   : Column(
                                       children: [
                                         Padding(
-                                          padding: EdgeInsets.all(isMobile ? 8.0 : 16.0),
-                                          child: Row(
-                                            children: [
-                                              Expanded(
-                                                child: TextField(
-                                                  controller: _searchController,
-                                                  decoration: InputDecoration(
-                                                    labelText: 'Search Products',
-                                                    hintText: 'Enter name or description',
-                                                    prefixIcon: const Icon(Icons.search),
-                                                    border: OutlineInputBorder(
-                                                      borderRadius: BorderRadius.circular(10),
-                                                    ),
-                                                    suffixIcon: IconButton(
-                                                      icon: const Icon(Icons.clear),
-                                                      onPressed: () {
-                                                        _searchController.clear();
-                                                        _applyProductFilters();
-                                                      },
-                                                    ),
-                                                  ),
-                                                  onChanged: (value) {
-                                                    _applyProductFilters();
-                                                  },
+                                          padding: EdgeInsets.all(isMobile ? 8.0 : isTablet ? 12.0 : 20.0),
+                                          child: isMobile
+                                              ? Column(
+                                                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                                                  children: _buildFilterRow(isMobile, isTablet),
+                                                )
+                                              : Row(
+                                                  children: _buildFilterRow(isMobile, isTablet),
                                                 ),
-                                              ),
-                                              const SizedBox(width: 8),
-                                              DropdownButton<String>(
-                                                value: _categoryFilter,
-                                                items: [
-                                                  const DropdownMenuItem(value: 'all', child: Text('All Categories')),
-                                                  ..._categories.map((cat) => DropdownMenuItem(
-                                                        value: cat['id'],
-                                                        child: Text(cat['name']),
-                                                      )),
-                                                ],
-                                                onChanged: (val) {
-                                                  setState(() {
-                                                    _categoryFilter = val ?? 'all';
-                                                  });
-                                                },
-                                              ),
-                                              const SizedBox(width: 8),
-                                              DropdownButton<String>(
-                                                value: _availabilityFilter,
-                                                items: const [
-                                                  DropdownMenuItem(value: 'all', child: Text('All Statuses')),
-                                                  DropdownMenuItem(value: 'available', child: Text('Available')),
-                                                  DropdownMenuItem(value: 'not_available', child: Text('Not Available')),
-                                                ],
-                                                onChanged: (val) {
-                                                  setState(() {
-                                                    _availabilityFilter = val ?? 'all';
-                                                  });
-                                                },
-                                              ),
-                                            ],
-                                          ),
                                         ),
                                         Expanded(
                                           child: _buildResponsiveProductLayout(isMobile, isTablet, _filteredProducts),
@@ -226,6 +195,64 @@ class _ProductsScreenState extends State<ProductsScreen> {
         },
       ),
     );
+  }
+
+  List<Widget> _buildFilterRow(bool isMobile, bool isTablet) {
+    return [
+      Expanded(
+        child: TextField(
+          controller: _searchController,
+          decoration: InputDecoration(
+            labelText: 'Search Products',
+            hintText: 'Enter name or description',
+            prefixIcon: const Icon(Icons.search),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+            suffixIcon: IconButton(
+              icon: const Icon(Icons.clear),
+              onPressed: () {
+                _searchController.clear();
+                _applyProductFilters();
+              },
+            ),
+          ),
+          onChanged: (value) {
+            _applyProductFilters();
+          },
+        ),
+      ),
+      SizedBox(width: isMobile ? 8 : 16),
+      DropdownButton<String>(
+        value: _categoryFilter,
+        items: [
+          const DropdownMenuItem(value: 'all', child: Text('All Categories')),
+          ..._categories.map((cat) => DropdownMenuItem(
+                value: cat['id'],
+                child: Text(cat['name']),
+              )),
+        ],
+        onChanged: (val) {
+          setState(() {
+            _categoryFilter = val ?? 'all';
+          });
+        },
+      ),
+      SizedBox(width: isMobile ? 8 : 16),
+      DropdownButton<String>(
+        value: _availabilityFilter,
+        items: const [
+          DropdownMenuItem(value: 'all', child: Text('All Statuses')),
+          DropdownMenuItem(value: 'available', child: Text('Available')),
+          DropdownMenuItem(value: 'not_available', child: Text('Not Available')),
+        ],
+        onChanged: (val) {
+          setState(() {
+            _availabilityFilter = val ?? 'all';
+          });
+        },
+      ),
+    ];
   }
 
   Widget _buildResponsiveProductLayout(bool isMobile, bool isTablet, List<Product> filteredProducts) {
@@ -375,6 +402,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
     final descController = TextEditingController();
     final imageUrlController = TextEditingController();
     final priceController = TextEditingController();
+    final codeController = TextEditingController();
     String? selectedCategoryId;
     bool isSubmitting = false;
     Uint8List? imageBytes;
@@ -428,6 +456,12 @@ class _ProductsScreenState extends State<ProductsScreen> {
                         controller: descController,
                         decoration: const InputDecoration(labelText: 'Description'),
                         validator: (v) => v == null || v.isEmpty ? 'Enter description' : null,
+                      ),
+                      const SizedBox(height: 12),
+                      TextFormField(
+                        controller: codeController,
+                        decoration: const InputDecoration(labelText: 'Code'),
+                        validator: (v) => v == null || v.isEmpty ? 'Enter code' : null,
                       ),
                       const SizedBox(height: 12),
                       Row(
@@ -521,6 +555,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
                                 'price': double.parse(priceController.text),
                                 'category_id': selectedCategoryId,
                                 'is_available': isAvailable,
+                                'code': codeController.text,
                               });
                               if (mounted) {
                                 Navigator.of(context).pop();
@@ -555,6 +590,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
     final descController = TextEditingController(text: product.description);
     final imageUrlController = TextEditingController(text: product.imageUrl);
     final priceController = TextEditingController(text: product.price.toString());
+    final codeController = TextEditingController(text: product.code);
     String? selectedCategoryId = product.categoryId;
     Uint8List? imageBytes;
     bool isSubmitting = false;
@@ -608,6 +644,12 @@ class _ProductsScreenState extends State<ProductsScreen> {
                         controller: descController,
                         decoration: const InputDecoration(labelText: 'Description'),
                         validator: (v) => v == null || v.isEmpty ? 'Enter description' : null,
+                      ),
+                      const SizedBox(height: 12),
+                      TextFormField(
+                        controller: codeController,
+                        decoration: const InputDecoration(labelText: 'Code'),
+                        validator: (v) => v == null || v.isEmpty ? 'Enter code' : null,
                       ),
                       const SizedBox(height: 12),
                       Row(
@@ -706,6 +748,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
                                 'price': double.parse(priceController.text),
                                 'category_id': selectedCategoryId,
                                 'is_available': isAvailable,
+                                'code': codeController.text,
                               }).eq('id', product.id).select();
                               if (mounted) {
                                 // ignore: unnecessary_type_check

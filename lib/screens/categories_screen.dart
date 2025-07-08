@@ -75,6 +75,8 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Categories'),
+        automaticallyImplyLeading: false,
+        leading: isMobile ? const SidebarMenu() : null,
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
@@ -85,8 +87,8 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
       drawer: isMobile ? const SidebarMenu() : null,
       floatingActionButton: FloatingActionButton(
         onPressed: _showAddCategoryDialog,
-        child: const Icon(Icons.add),
         tooltip: 'Add Category',
+        child: const Icon(Icons.add),
       ),
       body: Row(
         crossAxisAlignment: CrossAxisAlignment.start,

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:flutter/foundation.dart';
 import '../providers/auth_provider.dart';
 import '../widgets/sidebar_menu.dart';
 import '../models/user_model.dart';
@@ -453,11 +452,16 @@ class _UsersScreenState extends State<UsersScreen> {
     final width = MediaQuery.of(context).size.width;
     final isMobile = width < 600;
     final isTablet = width >= 600 && width < 1024;
-    final maxContentWidth = 900.0;
+    final isDesktop = width >= 1024;
+    final maxContentWidth = isDesktop ? 1100.0 : isTablet ? 800.0 : double.infinity;
+    final horizontalPadding = isMobile ? 4.0 : isTablet ? 16.0 : 32.0;
+    final verticalPadding = isMobile ? 4.0 : isTablet ? 8.0 : 24.0;
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('User Management'),
+        automaticallyImplyLeading: false,
+        leading: isMobile ? const SidebarMenu() : null,
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
@@ -483,12 +487,12 @@ class _UsersScreenState extends State<UsersScreen> {
                 child: Center(
                   child: ConstrainedBox(
                     constraints: BoxConstraints(
-                      maxWidth: isMobile ? double.infinity : maxContentWidth,
+                      maxWidth: maxContentWidth,
                     ),
                     child: Padding(
                       padding: EdgeInsets.symmetric(
-                        horizontal: isMobile ? 4.0 : 24.0,
-                        vertical: isMobile ? 4.0 : 16.0,
+                        horizontal: horizontalPadding,
+                        vertical: verticalPadding,
                       ),
                       child: _isLoading
                         ? const Center(child: CircularProgressIndicator())
@@ -519,54 +523,20 @@ class _UsersScreenState extends State<UsersScreen> {
                           : Column(
                               children: [
                                 Padding(
-                                  padding: EdgeInsets.all(isMobile ? 8.0 : 16.0),
-                                  child: Row(
-                                    children: [
-                                      Expanded(
-                                        child: TextField(
-                                          controller: _searchController,
-                                          decoration: InputDecoration(
-                                            labelText: 'Search Users',
-                                            hintText: 'Enter name, email or role',
-                                            prefixIcon: const Icon(Icons.search),
-                                            border: OutlineInputBorder(
-                                              borderRadius: BorderRadius.circular(10),
-                                            ),
-                                            suffixIcon: IconButton(
-                                              icon: const Icon(Icons.clear),
-                                              onPressed: () {
-                                                _searchController.clear();
-                                                _applyFilters();
-                                              },
-                                            ),
-                                          ),
-                                          onChanged: (value) {
-                                            _applyFilters();
-                                          },
-                                        ),
+                                  padding: EdgeInsets.all(isMobile ? 8.0 : isTablet ? 12.0 : 20.0),
+                                  child: isMobile
+                                    ? Column(
+                                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                                        children: _buildFilterRow(isMobile, isTablet),
+                                      )
+                                    : Row(
+                                        children: _buildFilterRow(isMobile, isTablet),
                                       ),
-                                      const SizedBox(width: 8),
-                                      DropdownButton<String>(
-                                        value: _filterType,
-                                        items: const [
-                                          DropdownMenuItem(value: 'all', child: Text('All Users')),
-                                          DropdownMenuItem(value: 'admin', child: Text('Admins')),
-                                          DropdownMenuItem(value: 'customer', child: Text('Customers')),
-                                        ],
-                                        onChanged: (value) {
-                                          setState(() {
-                                            _filterType = value ?? 'all';
-                                            _applyFilters();
-                                          });
-                                        },
-                                      ),
-                                    ],
-                                  ),
                                 ),
                                 Expanded(
                                   child: _filteredUsers.isEmpty
                                     ? const Center(child: Text('No users found'))
-                                    : _buildResponsiveLayout(isMobile, isTablet),
+                                    : _buildResponsiveLayout(isMobile, isTablet, isDesktop),
                                 ),
                               ],
                             ),
@@ -581,13 +551,56 @@ class _UsersScreenState extends State<UsersScreen> {
     );
   }
 
-  Widget _buildResponsiveLayout(bool isMobile, bool isTablet) {
+  List<Widget> _buildFilterRow(bool isMobile, bool isTablet) {
+    return [
+      Expanded(
+        child: TextField(
+          controller: _searchController,
+          decoration: InputDecoration(
+            labelText: 'Search Users',
+            hintText: 'Enter name, email or role',
+            prefixIcon: const Icon(Icons.search),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+            suffixIcon: IconButton(
+              icon: const Icon(Icons.clear),
+              onPressed: () {
+                _searchController.clear();
+                _applyFilters();
+              },
+            ),
+          ),
+          onChanged: (value) {
+            _applyFilters();
+          },
+        ),
+      ),
+      SizedBox(width: isMobile ? 8 : 16),
+      DropdownButton<String>(
+        value: _filterType,
+        items: const [
+          DropdownMenuItem(value: 'all', child: Text('All Users')),
+          DropdownMenuItem(value: 'admin', child: Text('Admins')),
+          DropdownMenuItem(value: 'customer', child: Text('Customers')),
+        ],
+        onChanged: (value) {
+          setState(() {
+            _filterType = value ?? 'all';
+            _applyFilters();
+          });
+        },
+      ),
+    ];
+  }
+
+  Widget _buildResponsiveLayout(bool isMobile, bool isTablet, [bool isDesktop = false]) {
     if (isMobile) {
       return ListView.builder(
         itemCount: _filteredUsers.length,
         itemBuilder: (context, index) {
           final user = _filteredUsers[index];
-          return _buildUserListItem(user);
+          return _buildUserListItem(user, isMobile, isTablet, isDesktop);
         },
       );
     } else {
@@ -596,6 +609,7 @@ class _UsersScreenState extends State<UsersScreen> {
         child: SingleChildScrollView(
           scrollDirection: Axis.horizontal,
           child: DataTable(
+            columnSpacing: isDesktop ? 32 : isTablet ? 20 : 12,
             columns: const [
               DataColumn(label: Text('Name')),
               DataColumn(label: Text('Email')),
@@ -606,8 +620,8 @@ class _UsersScreenState extends State<UsersScreen> {
             rows: _filteredUsers.map((user) {
               return DataRow(
                 cells: [
-                  DataCell(Text(user.fullName ?? 'N/A')),
-                  DataCell(Text(user.email)),
+                  DataCell(Text(user.fullName ?? 'N/A', style: TextStyle(fontSize: isDesktop ? 16 : 14))),
+                  DataCell(Text(user.email, style: TextStyle(fontSize: isDesktop ? 16 : 14))),
                   DataCell(
                     Row(
                       mainAxisSize: MainAxisSize.min,
@@ -618,11 +632,11 @@ class _UsersScreenState extends State<UsersScreen> {
                           size: 16,
                         ),
                         const SizedBox(width: 4),
-                        Text(user.role),
+                        Text(user.role, style: TextStyle(fontSize: isDesktop ? 16 : 14)),
                       ],
                     ),
                   ),
-                  DataCell(Text(DateFormat('MMM d, yyyy').format(user.createdAt))),
+                  DataCell(Text(DateFormat('MMM d, yyyy').format(user.createdAt), style: TextStyle(fontSize: isDesktop ? 16 : 14))),
                   DataCell(Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -642,17 +656,17 @@ class _UsersScreenState extends State<UsersScreen> {
                     ],
                   )),
                 ],
-                );
+              );
             }).toList(),
           ),
         ),
       );
     }
   }
-  
-  Widget _buildUserListItem(UserModel user) {
+
+  Widget _buildUserListItem(UserModel user, bool isMobile, bool isTablet, bool isDesktop) {
     return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      margin: EdgeInsets.symmetric(horizontal: isMobile ? 8 : 16, vertical: isMobile ? 4 : 8),
       child: ListTile(
         leading: CircleAvatar(
           backgroundColor: user.role == 'admin' ? Colors.red.shade100 : Colors.blue.shade100,
@@ -661,14 +675,14 @@ class _UsersScreenState extends State<UsersScreen> {
             color: user.role == 'admin' ? Colors.red : Colors.blue,
           ),
         ),
-        title: Text(user.fullName ?? 'N/A'),
+        title: Text(user.fullName ?? 'N/A', style: TextStyle(fontSize: isMobile ? 15 : 17, fontWeight: FontWeight.bold)),
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(user.email),
+            Text(user.email, style: TextStyle(fontSize: isMobile ? 13 : 15)),
             Text(
               'Registered: ${DateFormat('MMM d, yyyy').format(user.createdAt)}',
-              style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+              style: TextStyle(fontSize: isMobile ? 11 : 13, color: Colors.grey.shade600),
             ),
           ],
         ),

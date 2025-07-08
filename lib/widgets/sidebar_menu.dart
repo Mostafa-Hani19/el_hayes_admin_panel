@@ -23,7 +23,7 @@ class SidebarMenu extends StatelessWidget {
       drawerWidth = 280; // Slightly wider on desktop
     }
     
-    return Container(
+    return SizedBox(
       width: isMobile ? null : drawerWidth,
       child: Drawer(
         width: isMobile ? drawerWidth : null,
@@ -129,6 +129,13 @@ class SidebarMenu extends StatelessWidget {
               route: '/settings',
               isActive: currentRoute == '/settings',
             ),
+            ListTile(
+              leading: const Icon(Icons.support_agent),
+              title: const Text('Support Messages'),
+              onTap: () {
+                Navigator.pushReplacementNamed(context, '/support_messages');
+              },
+            ),
             const Divider(),
             ListTile(
               leading: const Icon(Icons.logout),
@@ -195,8 +202,8 @@ class SidebarMenu extends StatelessWidget {
   }
 
   static void _showSendNotificationDialog(BuildContext context) {
-    final _titleController = TextEditingController();
-    final _bodyController = TextEditingController();
+    final titleController = TextEditingController();
+    final bodyController = TextEditingController();
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
 
     showDialog(
@@ -207,11 +214,11 @@ class SidebarMenu extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             TextField(
-              controller: _titleController,
+              controller: titleController,
               decoration: const InputDecoration(labelText: 'Title'),
             ),
             TextField(
-              controller: _bodyController,
+              controller: bodyController,
               decoration: const InputDecoration(labelText: 'Body'),
             ),
           ],
@@ -233,8 +240,8 @@ class SidebarMenu extends StatelessWidget {
                 // Insert a notification for each user
                 final notifications = userIds.map((userId) => {
                   'user_id': userId,
-                  'title': _titleController.text,
-                  'body': _bodyController.text,
+                  'title': titleController.text,
+                  'body': bodyController.text,
                   'is_read': false,
                   'created_at': DateTime.now().toIso8601String(),
                 }).toList();

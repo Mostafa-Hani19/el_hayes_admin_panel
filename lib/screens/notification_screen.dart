@@ -5,7 +5,7 @@ import '../widgets/sidebar_menu.dart';
 import '../utils/constants.dart';
 
 class NotificationScreen extends StatefulWidget {
-  const NotificationScreen({Key? key}) : super(key: key);
+  const NotificationScreen({super.key});
 
   @override
   State<NotificationScreen> createState() => _NotificationScreenState();
@@ -23,13 +23,17 @@ class _NotificationScreenState extends State<NotificationScreen> {
     try {
       final users = await supabase.from('profiles').select('id');
       final userIds = (users as List).map((u) => u['id'] as String).toList();
-      final notifications = userIds.map((userId) => {
-        'user_id': userId,
-        'title': _titleController.text,
-        'body': _bodyController.text,
-        'is_read': false,
-        'created_at': DateTime.now().toIso8601String(),
-      }).toList();
+      final notifications = userIds
+          .map(
+            (userId) => {
+              'user_id': userId,
+              'title': _titleController.text,
+              'body': _bodyController.text,
+              'is_read': false,
+              'created_at': DateTime.now().toIso8601String(),
+            },
+          )
+          .toList();
       await supabase.from('notifications').insert(notifications);
       _titleController.clear();
       _bodyController.clear();
@@ -72,9 +76,9 @@ class _NotificationScreenState extends State<NotificationScreen> {
         .eq('body', notification['body'])
         .eq('created_at', notification['created_at']);
     setState(() {}); // Refresh list
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Notification deleted')),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('Notification deleted')));
   }
 
   @override
@@ -85,7 +89,11 @@ class _NotificationScreenState extends State<NotificationScreen> {
     final maxContentWidth = 700.0;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Notifications'), automaticallyImplyLeading: false),
+      appBar: AppBar(
+        title: const Text('Notifications'),
+        automaticallyImplyLeading: false,
+        leading: isMobile ? const SidebarMenu() : null,
+      ),
       drawer: isMobile ? const SidebarMenu() : null,
       body: LayoutBuilder(
         builder: (context, constraints) {
@@ -110,18 +118,30 @@ class _NotificationScreenState extends State<NotificationScreen> {
                                 children: [
                                   TextField(
                                     controller: _titleController,
-                                    decoration: const InputDecoration(labelText: 'Title'),
+                                    decoration: const InputDecoration(
+                                      labelText: 'Title',
+                                    ),
                                   ),
                                   SizedBox(height: isMobile ? 8 : 16),
                                   TextField(
                                     controller: _bodyController,
-                                    decoration: const InputDecoration(labelText: 'Body'),
+                                    decoration: const InputDecoration(
+                                      labelText: 'Body',
+                                    ),
                                   ),
                                   const SizedBox(height: 8),
                                   ElevatedButton(
-                                    onPressed: _isSending ? null : _sendNotification,
+                                    onPressed: _isSending
+                                        ? null
+                                        : _sendNotification,
                                     child: _isSending
-                                        ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
+                                        ? const SizedBox(
+                                            width: 20,
+                                            height: 20,
+                                            child: CircularProgressIndicator(
+                                              strokeWidth: 2,
+                                            ),
+                                          )
                                         : const Text('Send Notification'),
                                   ),
                                 ],
@@ -134,11 +154,15 @@ class _NotificationScreenState extends State<NotificationScreen> {
                               future: _fetchNotifications(),
                               builder: (context, snapshot) {
                                 if (!snapshot.hasData) {
-                                  return const Center(child: CircularProgressIndicator());
+                                  return const Center(
+                                    child: CircularProgressIndicator(),
+                                  );
                                 }
                                 final notifications = snapshot.data!;
                                 if (notifications.isEmpty) {
-                                  return const Center(child: Text('No notifications sent.'));
+                                  return const Center(
+                                    child: Text('No notifications sent.'),
+                                  );
                                 }
                                 return ListView.builder(
                                   itemCount: notifications.length,
@@ -146,11 +170,19 @@ class _NotificationScreenState extends State<NotificationScreen> {
                                     final notification = notifications[index];
                                     return Card(
                                       child: ListTile(
-                                        title: Text(notification['title'] ?? ''),
-                                        subtitle: Text(notification['body'] ?? ''),
+                                        title: Text(
+                                          notification['title'] ?? '',
+                                        ),
+                                        subtitle: Text(
+                                          notification['body'] ?? '',
+                                        ),
                                         trailing: IconButton(
-                                          icon: const Icon(Icons.delete, color: Colors.red),
-                                          onPressed: () => _deleteNotification(notification),
+                                          icon: const Icon(
+                                            Icons.delete,
+                                            color: Colors.red,
+                                          ),
+                                          onPressed: () =>
+                                              _deleteNotification(notification),
                                         ),
                                       ),
                                     );
@@ -171,4 +203,4 @@ class _NotificationScreenState extends State<NotificationScreen> {
       ),
     );
   }
-} 
+}

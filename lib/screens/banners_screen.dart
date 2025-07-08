@@ -8,7 +8,7 @@ import '../utils/constants.dart';
 import 'dart:typed_data';
 
 class BannersScreen extends StatefulWidget {
-  const BannersScreen({Key? key}) : super(key: key);
+  const BannersScreen({super.key});
 
   @override
   State<BannersScreen> createState() => _BannersScreenState();
@@ -60,7 +60,7 @@ class _BannersScreenState extends State<BannersScreen> {
               final fileName = 'banner_${DateTime.now().millisecondsSinceEpoch}.jpg';
               try {
                 final response = await supabase.storage.from('banners').uploadBinary(fileName, result.files.single.bytes!);
-                if (response == null || response.isEmpty) {
+                if (response.isEmpty) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(content: Text('Upload error: Empty response')),
                   );
@@ -287,8 +287,8 @@ class _BannersScreenState extends State<BannersScreen> {
       drawer: isMobile ? const SidebarMenu() : null,
       floatingActionButton: FloatingActionButton(
         onPressed: _showAddBannerDialog,
-        child: const Icon(Icons.add),
         tooltip: 'Add Banner',
+        child: const Icon(Icons.add),
       ),
       body: Row(
         crossAxisAlignment: CrossAxisAlignment.start,

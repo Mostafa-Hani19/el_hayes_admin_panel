@@ -15,8 +15,11 @@ import 'screens/splash_screen.dart';
 import 'screens/notification_screen.dart';
 import 'screens/banners_screen.dart';
 import 'screens/tickers_screen.dart';
+import 'screens/order_details_screen.dart';
+import 'screens/support_messages_screen.dart';
 import 'services/auth_service.dart';
 import 'utils/constants.dart';
+import 'screens/orders_screen.dart' show ordersStreamProvider;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -43,6 +46,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(
           create: (_) => AuthProvider(authService),
         ),
+        ordersStreamProvider,
       ],
       child: MaterialApp(
         title: Constants.appName,
@@ -63,6 +67,11 @@ class MyApp extends StatelessWidget {
           '/notifications': (context) => const NotificationScreen(),
           '/banners': (context) => const BannersScreen(),
           '/tickers': (context) => const TickersScreen(),
+          OrderDetailsScreen.routeName: (context) {
+            final args = ModalRoute.of(context)!.settings.arguments as String;
+            return OrderDetailsScreen(orderId: args);
+          },
+          '/support_messages': (context) => const SupportMessagesScreen(),
         },
       ),
     );

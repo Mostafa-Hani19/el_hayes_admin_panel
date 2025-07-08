@@ -7,7 +7,7 @@ import '../utils/constants.dart';
 import 'dart:typed_data';
 
 class TickersScreen extends StatefulWidget {
-  const TickersScreen({Key? key}) : super(key: key);
+  const TickersScreen({super.key});
 
   @override
   State<TickersScreen> createState() => _TickersScreenState();
@@ -27,7 +27,10 @@ class _TickersScreenState extends State<TickersScreen> {
     setState(() => _isLoading = true);
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
     final supabase = authProvider.supabaseClient;
-    final data = await supabase.from('tickers').select('*').order('created_at', ascending: false);
+    final data = await supabase
+        .from('tickers')
+        .select('*')
+        .order('created_at', ascending: false);
     setState(() {
       _tickers = List<Map<String, dynamic>>.from(data);
       _isLoading = false;
@@ -46,29 +49,43 @@ class _TickersScreenState extends State<TickersScreen> {
       builder: (context) => StatefulBuilder(
         builder: (context, setState) {
           Future<void> pickImage() async {
-            final result = await FilePicker.platform.pickFiles(type: FileType.image);
+            final result = await FilePicker.platform.pickFiles(
+              type: FileType.image,
+            );
             if (result != null && result.files.single.bytes != null) {
               setState(() => isUploading = true);
-              final authProvider = Provider.of<AuthProvider>(context, listen: false);
+              final authProvider = Provider.of<AuthProvider>(
+                context,
+                listen: false,
+              );
               final supabase = authProvider.supabaseClient;
-              final fileName = 'ticker_${DateTime.now().millisecondsSinceEpoch}.jpg';
+              final fileName =
+                  'ticker_${DateTime.now().millisecondsSinceEpoch}.jpg';
               try {
-                final response = await supabase.storage.from('tickers').uploadBinary(fileName, result.files.single.bytes!);
-                if (response == null || response.isEmpty) {
+                final response = await supabase.storage
+                    .from('tickers')
+                    .uploadBinary(fileName, result.files.single.bytes!);
+                if (response.isEmpty) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Upload error: Empty response')),
+                    const SnackBar(
+                      content: Text('Upload error: Empty response'),
+                    ),
                   );
                   setState(() => isUploading = false);
                   return;
                 }
                 setState(() {
                   imageBytes = result.files.single.bytes;
-                  uploadedImageUrl = supabase.storage.from('tickers').getPublicUrl(fileName);
+                  uploadedImageUrl = supabase.storage
+                      .from('tickers')
+                      .getPublicUrl(fileName);
                   isUploading = false;
                 });
               } catch (e) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('Exception during upload: \\${e.toString()}')),
+                  SnackBar(
+                    content: Text('Exception during upload: \\${e.toString()}'),
+                  ),
                 );
                 setState(() => isUploading = false);
               }
@@ -92,16 +109,31 @@ class _TickersScreenState extends State<TickersScreen> {
                         ),
                         const SizedBox(width: 8),
                         if (isUploading)
-                          const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2)),
+                          const SizedBox(
+                            width: 24,
+                            height: 24,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          ),
                         if (imageBytes != null)
-                          Image.memory(imageBytes!, width: 56, height: 56, fit: BoxFit.cover),
+                          Image.memory(
+                            imageBytes!,
+                            width: 56,
+                            height: 56,
+                            fit: BoxFit.cover,
+                          ),
                       ],
                     ),
                     if (uploadedImageUrl == null)
                       TextFormField(
                         controller: imageUrlController,
-                        decoration: const InputDecoration(labelText: 'Image URL'),
-                        validator: (v) => (uploadedImageUrl == null && (v == null || v.isEmpty)) ? 'Pick image or enter URL' : null,
+                        decoration: const InputDecoration(
+                          labelText: 'Image URL',
+                        ),
+                        validator: (v) =>
+                            (uploadedImageUrl == null &&
+                                (v == null || v.isEmpty))
+                            ? 'Pick image or enter URL'
+                            : null,
                       ),
                   ],
                 ),
@@ -117,10 +149,14 @@ class _TickersScreenState extends State<TickersScreen> {
                     ? null
                     : () async {
                         if (formKey.currentState?.validate() ?? false) {
-                          final authProvider = Provider.of<AuthProvider>(context, listen: false);
+                          final authProvider = Provider.of<AuthProvider>(
+                            context,
+                            listen: false,
+                          );
                           final supabase = authProvider.supabaseClient;
                           await supabase.from('tickers').insert({
-                            'image_url': uploadedImageUrl ?? imageUrlController.text,
+                            'image_url':
+                                uploadedImageUrl ?? imageUrlController.text,
                             'created_at': DateTime.now().toIso8601String(),
                           });
                           Navigator.pop(context);
@@ -140,12 +176,16 @@ class _TickersScreenState extends State<TickersScreen> {
   Widget build(BuildContext context) {
     final isMobile = Constants.isMobile(context);
     return Scaffold(
-      appBar: AppBar(title: const Text('Ticker Banners'), automaticallyImplyLeading: false),
+      appBar: AppBar(
+        title: const Text('Ticker Banners'),
+        automaticallyImplyLeading: false,
+        leading: isMobile ? const SidebarMenu() : null,
+      ),
       drawer: isMobile ? const SidebarMenu() : null,
       floatingActionButton: FloatingActionButton(
         onPressed: _showAddTickerDialog,
-        child: const Icon(Icons.add),
         tooltip: 'Add Ticker Banner',
+        child: const Icon(Icons.add),
       ),
       body: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -155,34 +195,47 @@ class _TickersScreenState extends State<TickersScreen> {
             child: _isLoading
                 ? const Center(child: CircularProgressIndicator())
                 : _tickers.isEmpty
-                    ? const Center(child: Text('No ticker banners found'))
-                    : ListView.builder(
-                        padding: const EdgeInsets.all(16),
-                        itemCount: _tickers.length,
-                        itemBuilder: (context, i) {
-                          final t = _tickers[i];
-                          return Card(
-                            child: ListTile(
-                              leading: t['image_url'] != null && t['image_url'].isNotEmpty
-                                  ? Image.network(t['image_url'], width: 56, height: 56, fit: BoxFit.cover)
-                                  : const Icon(Icons.image, size: 56),
-                              trailing: IconButton(
-                                icon: const Icon(Icons.delete, color: Colors.red),
-                                tooltip: 'Delete Ticker Banner',
-                                onPressed: () async {
-                                  final authProvider = Provider.of<AuthProvider>(context, listen: false);
-                                  final supabase = authProvider.supabaseClient;
-                                  await supabase.from('tickers').delete().eq('id', t['id']);
-                                  _loadTickers();
-                                },
-                              ),
-                            ),
-                          );
-                        },
-                      ),
+                ? const Center(child: Text('No ticker banners found'))
+                : ListView.builder(
+                    padding: const EdgeInsets.all(16),
+                    itemCount: _tickers.length,
+                    itemBuilder: (context, i) {
+                      final t = _tickers[i];
+                      return Card(
+                        child: ListTile(
+                          leading:
+                              t['image_url'] != null &&
+                                  t['image_url'].isNotEmpty
+                              ? Image.network(
+                                  t['image_url'],
+                                  width: 56,
+                                  height: 56,
+                                  fit: BoxFit.cover,
+                                )
+                              : const Icon(Icons.image, size: 56),
+                          trailing: IconButton(
+                            icon: const Icon(Icons.delete, color: Colors.red),
+                            tooltip: 'Delete Ticker Banner',
+                            onPressed: () async {
+                              final authProvider = Provider.of<AuthProvider>(
+                                context,
+                                listen: false,
+                              );
+                              final supabase = authProvider.supabaseClient;
+                              await supabase
+                                  .from('tickers')
+                                  .delete()
+                                  .eq('id', t['id']);
+                              _loadTickers();
+                            },
+                          ),
+                        ),
+                      );
+                    },
+                  ),
           ),
         ],
       ),
     );
   }
-} 
+}

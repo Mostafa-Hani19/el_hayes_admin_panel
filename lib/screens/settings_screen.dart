@@ -39,19 +39,24 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final supabase = authProvider.supabaseClient;
     final value = _feeController.text.trim();
     if (value.isEmpty) return;
-    await supabase
-        .from('settings')
-        .upsert({'key': 'delivery_fee', 'value': value});
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Delivery fee updated!')),
-    );
+    await supabase.from('settings').upsert({
+      'key': 'delivery_fee',
+      'value': value,
+    });
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('Delivery fee updated!')));
   }
 
   @override
   Widget build(BuildContext context) {
     final isMobile = Constants.isMobile(context);
     return Scaffold(
-      appBar: AppBar(title: const Text('Settings'), automaticallyImplyLeading: false),
+      appBar: AppBar(
+        title: const Text('Settings'),
+        automaticallyImplyLeading: false,
+        leading: isMobile ? const SidebarMenu() : null,
+      ),
       drawer: isMobile ? const SidebarMenu() : null,
       body: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
