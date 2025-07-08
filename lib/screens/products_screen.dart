@@ -1,0 +1,806 @@
+// استيراد الحزم المطلوبة
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../models/product_model.dart';
+import '../providers/auth_provider.dart';
+import '../widgets/sidebar_menu.dart';
+import 'dart:typed_data';
+import 'package:image_picker/image_picker.dart';
+import '../utils/constants.dart';
+
+class ProductsScreen extends StatefulWidget {
+  const ProductsScreen({super.key});
+
+  @override
+  State<ProductsScreen> createState() => _ProductsScreenState();
+}
+
+class _ProductsScreenState extends State<ProductsScreen> {
+  final TextEditingController _searchController = TextEditingController();
+  List<Product> _products = [];
+  List<Map<String, dynamic>> _categories = [];
+  bool _isLoading = true;
+  String? _error;
+  String _searchQuery = '';
+  String _categoryFilter = 'all';
+  String _availabilityFilter = 'all';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadProducts();
+    _loadCategories();
+  }
+
+  Future<void> _loadProducts() async {
+    setState(() {
+      _isLoading = true;
+      _error = null;
+    });
+    try {
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+      final supabase = authProvider.supabaseClient;
+      final response = await supabase
+          .from('products')
+          .select('*')
+          .order('created_at', ascending: false);
+      final List<Product> fetched = response.map<Product>((p) => Product.fromJson(p)).toList();
+      if (mounted) {
+        setState(() {
+          _products = fetched;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _error = 'Failed to load products: $e';
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _loadCategories() async {
+    try {
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+      final supabase = authProvider.supabaseClient;
+      final data = await supabase.from('categories').select('id, name');
+      if (mounted) {
+        setState(() {
+          _categories = List<Map<String, dynamic>>.from(data);
+        });
+      }
+    } catch (e) {
+      debugPrint('Failed to load categories: $e');
+    }
+  }
+
+  void _applyProductFilters() {
+    setState(() {
+      _searchQuery = _searchController.text.toLowerCase().trim();
+    });
+  }
+
+  List<Product> get _filteredProducts {
+    return _products.where((p) {
+      final matchesSearch = _searchQuery.isEmpty ||
+          p.name.toLowerCase().contains(_searchQuery) ||
+          p.description.toLowerCase().contains(_searchQuery);
+      final matchesCategory = _categoryFilter == 'all' || p.categoryId == _categoryFilter;
+      final matchesAvailability = _availabilityFilter == 'all' ||
+          (_availabilityFilter == 'available' && p.isAvailable) ||
+          (_availabilityFilter == 'not_available' && !p.isAvailable);
+      return matchesSearch && matchesCategory && matchesAvailability;
+    }).toList();
+  }
+
+  String _getCategoryName(String id) {
+    final cat = _categories.firstWhere((c) => c['id'] == id, orElse: () => <String, dynamic>{});
+    return cat.isNotEmpty ? cat['name'] ?? '' : id;
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isMobile = Constants.isMobile(context);
+    final isTablet = Constants.isTablet(context);
+    final maxContentWidth = 900.0;
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Products'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: _loadProducts,
+          ),
+        ],
+      ),
+      drawer: isMobile ? const SidebarMenu() : null,
+      floatingActionButton: FloatingActionButton(
+        onPressed: _showAddProductDialog,
+        child: const Icon(Icons.add),
+        tooltip: 'Add Product',
+      ),
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          return Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (!isMobile) const SidebarMenu(),
+              Expanded(
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(
+                      maxWidth: isMobile ? double.infinity : maxContentWidth,
+                    ),
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: isMobile ? 4.0 : 24.0,
+                        vertical: isMobile ? 4.0 : 16.0,
+                      ),
+                      child: _isLoading
+                          ? const Center(child: CircularProgressIndicator())
+                          : _error != null
+                              ? Center(child: Text(_error!))
+                              : _products.isEmpty
+                                  ? const Center(child: Text('No products found'))
+                                  : Column(
+                                      children: [
+                                        Padding(
+                                          padding: EdgeInsets.all(isMobile ? 8.0 : 16.0),
+                                          child: Row(
+                                            children: [
+                                              Expanded(
+                                                child: TextField(
+                                                  controller: _searchController,
+                                                  decoration: InputDecoration(
+                                                    labelText: 'Search Products',
+                                                    hintText: 'Enter name or description',
+                                                    prefixIcon: const Icon(Icons.search),
+                                                    border: OutlineInputBorder(
+                                                      borderRadius: BorderRadius.circular(10),
+                                                    ),
+                                                    suffixIcon: IconButton(
+                                                      icon: const Icon(Icons.clear),
+                                                      onPressed: () {
+                                                        _searchController.clear();
+                                                        _applyProductFilters();
+                                                      },
+                                                    ),
+                                                  ),
+                                                  onChanged: (value) {
+                                                    _applyProductFilters();
+                                                  },
+                                                ),
+                                              ),
+                                              const SizedBox(width: 8),
+                                              DropdownButton<String>(
+                                                value: _categoryFilter,
+                                                items: [
+                                                  const DropdownMenuItem(value: 'all', child: Text('All Categories')),
+                                                  ..._categories.map((cat) => DropdownMenuItem(
+                                                        value: cat['id'],
+                                                        child: Text(cat['name']),
+                                                      )),
+                                                ],
+                                                onChanged: (val) {
+                                                  setState(() {
+                                                    _categoryFilter = val ?? 'all';
+                                                  });
+                                                },
+                                              ),
+                                              const SizedBox(width: 8),
+                                              DropdownButton<String>(
+                                                value: _availabilityFilter,
+                                                items: const [
+                                                  DropdownMenuItem(value: 'all', child: Text('All Statuses')),
+                                                  DropdownMenuItem(value: 'available', child: Text('Available')),
+                                                  DropdownMenuItem(value: 'not_available', child: Text('Not Available')),
+                                                ],
+                                                onChanged: (val) {
+                                                  setState(() {
+                                                    _availabilityFilter = val ?? 'all';
+                                                  });
+                                                },
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                        Expanded(
+                                          child: _buildResponsiveProductLayout(isMobile, isTablet, _filteredProducts),
+                                        ),
+                                      ],
+                                    ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildResponsiveProductLayout(bool isMobile, bool isTablet, List<Product> filteredProducts) {
+    if (isMobile || isTablet) {
+      return ListView.separated(
+        padding: const EdgeInsets.all(16),
+        itemCount: filteredProducts.length,
+        separatorBuilder: (context, i) => const Divider(),
+        itemBuilder: (context, i) => _buildProductListItem(filteredProducts[i]),
+      );
+    } else {
+      // Desktop: DataTable
+      return SingleChildScrollView(
+        scrollDirection: Axis.vertical,
+        child: SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: DataTable(
+            columns: const [
+              DataColumn(label: Text('Image')),
+              DataColumn(label: Text('Name')),
+              DataColumn(label: Text('Description')),
+              DataColumn(label: Text('Category')),
+              DataColumn(label: Text('Price')),
+              DataColumn(label: Text('Status')),
+              DataColumn(label: Text('Actions')),
+            ],
+            rows: filteredProducts.map((p) => _buildProductDataRow(p)).toList(),
+          ),
+        ),
+      );
+    }
+  }
+
+  Widget _buildProductListItem(Product p) {
+    return ListTile(
+      leading: p.imageUrl.isNotEmpty
+          ? Image.network(p.imageUrl, width: 56, height: 56, fit: BoxFit.cover)
+          : const Icon(Icons.image, size: 56),
+      title: Text(p.name),
+      subtitle: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(p.description),
+          const SizedBox(height: 4),
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                decoration: BoxDecoration(
+                  color: p.isAvailable ? Colors.green[100] : Colors.red[100],
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  p.isAvailable ? 'Available' : 'Not Available',
+                  style: TextStyle(
+                    color: p.isAvailable ? Colors.green[800] : Colors.red[800],
+                    fontWeight: FontWeight.bold,
+                    fontSize: 12,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Flexible(
+                child: Text(
+                  'Category: ${_getCategoryName(p.categoryId)}',
+                  style: const TextStyle(fontSize: 12),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text('EGP ${p.price.toStringAsFixed(2)}'),
+            ],
+          ),
+          const SizedBox(width: 8),
+          IconButton(
+            icon: const Icon(Icons.edit),
+            tooltip: 'Edit',
+            onPressed: () => _showEditProductDialog(p),
+          ),
+          IconButton(
+            icon: const Icon(Icons.delete),
+            tooltip: 'Delete',
+            onPressed: () => _showDeleteProductDialog(p),
+          ),
+        ],
+      ),
+    );
+  }
+
+  DataRow _buildProductDataRow(Product p) {
+    return DataRow(
+      cells: [
+        DataCell(p.imageUrl.isNotEmpty
+            ? Image.network(p.imageUrl, width: 40, height: 40, fit: BoxFit.cover)
+            : const Icon(Icons.image, size: 40)),
+        DataCell(Text(p.name)),
+        DataCell(Text(p.description)),
+        DataCell(Text(_getCategoryName(p.categoryId))),
+        DataCell(Text('EGP ${p.price.toStringAsFixed(2)}')),
+        DataCell(Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+          decoration: BoxDecoration(
+            color: p.isAvailable ? Colors.green[100] : Colors.red[100],
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Text(
+            p.isAvailable ? 'Available' : 'Not Available',
+            style: TextStyle(
+              color: p.isAvailable ? Colors.green[800] : Colors.red[800],
+              fontWeight: FontWeight.bold,
+              fontSize: 12,
+            ),
+          ),
+        )),
+        DataCell(Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            IconButton(
+              icon: const Icon(Icons.edit),
+              tooltip: 'Edit',
+              onPressed: () => _showEditProductDialog(p),
+            ),
+            IconButton(
+              icon: const Icon(Icons.delete),
+              tooltip: 'Delete',
+              onPressed: () => _showDeleteProductDialog(p),
+            ),
+          ],
+        )),
+      ],
+    );
+  }
+
+  Future<void> _showAddProductDialog() async {
+    final formKey = GlobalKey<FormState>();
+    final nameController = TextEditingController();
+    final descController = TextEditingController();
+    final imageUrlController = TextEditingController();
+    final priceController = TextEditingController();
+    String? selectedCategoryId;
+    bool isSubmitting = false;
+    Uint8List? imageBytes;
+    bool isAvailable = true;
+
+    await showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            Future<void> pickImage() async {
+              final picker = ImagePicker();
+              final picked = await picker.pickImage(source: ImageSource.gallery);
+              if (picked != null) {
+                final bytes = await picked.readAsBytes();
+                setState(() {
+                  imageBytes = bytes;
+                });
+              }
+            }
+
+            Future<String?> uploadImage(Uint8List bytes) async {
+              try {
+                final authProvider = Provider.of<AuthProvider>(context, listen: false);
+                final supabase = authProvider.supabaseClient;
+                final fileName = 'product_${DateTime.now().millisecondsSinceEpoch}.jpg';
+                await supabase.storage.from('product-images').uploadBinary(fileName, bytes);
+                return supabase.storage.from('product-images').getPublicUrl(fileName);
+              } catch (e) {
+                debugPrint('Image upload error: $e');
+                return null;
+              }
+            }
+
+            return AlertDialog(
+              title: const Text('Add Product'),
+              content: SingleChildScrollView(
+                child: Form(
+                  key: formKey,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      TextFormField(
+                        controller: nameController,
+                        decoration: const InputDecoration(labelText: 'Name'),
+                        validator: (v) => v == null || v.isEmpty ? 'Enter name' : null,
+                      ),
+                      const SizedBox(height: 12),
+                      TextFormField(
+                        controller: descController,
+                        decoration: const InputDecoration(labelText: 'Description'),
+                        validator: (v) => v == null || v.isEmpty ? 'Enter description' : null,
+                      ),
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          ElevatedButton.icon(
+                            onPressed: pickImage,
+                            icon: const Icon(Icons.image),
+                            label: const Text('Pick Image'),
+                          ),
+                          const SizedBox(width: 8),
+                          if (imageBytes != null)
+                            SizedBox(
+                              width: 56,
+                              height: 56,
+                              child: Image.memory(imageBytes!, fit: BoxFit.cover),
+                            ),
+                        ],
+                      ),
+                      if (imageBytes == null)
+                        TextFormField(
+                          controller: imageUrlController,
+                          decoration: const InputDecoration(labelText: 'Image URL'),
+                          validator: (v) => v == null || v.isEmpty ? 'Pick image or enter URL' : null,
+                        ),
+                      const SizedBox(height: 12),
+                      TextFormField(
+                        controller: priceController,
+                        decoration: const InputDecoration(labelText: 'Price'),
+                        keyboardType: TextInputType.number,
+                        validator: (v) => v == null || v.isEmpty ? 'Enter price' : null,
+                      ),
+                      const SizedBox(height: 12),
+                      DropdownButtonFormField<String>(
+                        value: selectedCategoryId,
+                        hint: const Text('Select Category'),
+                        items: _categories.map((category) {
+                          return DropdownMenuItem<String>(
+                            value: category['id'],
+                            child: Text(category['name']),
+                          );
+                        }).toList(),
+                        onChanged: (val) => setState(() => selectedCategoryId = val),
+                        validator: (val) => val == null ? 'Select category' : null,
+                      ),
+                      const SizedBox(height: 12),
+                      DropdownButtonFormField<bool>(
+                        value: isAvailable,
+                        decoration: const InputDecoration(labelText: 'Availability Status'),
+                        items: const [
+                          DropdownMenuItem(value: true, child: Text('Available')),
+                          DropdownMenuItem(value: false, child: Text('Not Available')),
+                        ],
+                        onChanged: (val) => setState(() => isAvailable = val ?? true),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: const Text('Cancel'),
+                ),
+                ElevatedButton(
+                  onPressed: isSubmitting
+                      ? null
+                      : () async {
+                          if (formKey.currentState?.validate() ?? false) {
+                            setState(() => isSubmitting = true);
+                            String imageUrl = imageUrlController.text;
+                            if (imageBytes != null) {
+                              final uploaded = await uploadImage(imageBytes!);
+                              if (uploaded != null) {
+                                imageUrl = uploaded;
+                              } else {
+                                setState(() => isSubmitting = false);
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(content: Text('Image upload failed')),
+                                );
+                                return;
+                              }
+                            }
+
+                            try {
+                              final authProvider = Provider.of<AuthProvider>(context, listen: false);
+                              final supabase = authProvider.supabaseClient;
+                              await supabase.from('products').insert({
+                                'name': nameController.text,
+                                'description': descController.text,
+                                'image_url': imageUrl,
+                                'price': double.parse(priceController.text),
+                                'category_id': selectedCategoryId,
+                                'is_available': isAvailable,
+                              });
+                              if (mounted) {
+                                Navigator.of(context).pop();
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(content: Text('Product added successfully')),
+                                );
+                                _loadProducts();
+                              }
+                            } catch (e) {
+                              setState(() => isSubmitting = false);
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text('Error: $e')),
+                              );
+                            }
+                          }
+                        },
+                  child: isSubmitting
+                      ? const CircularProgressIndicator()
+                      : const Text('Add'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Future<void> _showEditProductDialog(Product product) async {
+    final formKey = GlobalKey<FormState>();
+    final nameController = TextEditingController(text: product.name);
+    final descController = TextEditingController(text: product.description);
+    final imageUrlController = TextEditingController(text: product.imageUrl);
+    final priceController = TextEditingController(text: product.price.toString());
+    String? selectedCategoryId = product.categoryId;
+    Uint8List? imageBytes;
+    bool isSubmitting = false;
+    bool isAvailable = product.isAvailable;
+
+    await showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            Future<void> pickImage() async {
+              final picker = ImagePicker();
+              final picked = await picker.pickImage(source: ImageSource.gallery);
+              if (picked != null) {
+                final bytes = await picked.readAsBytes();
+                setState(() {
+                  imageBytes = bytes;
+                });
+              }
+            }
+
+            Future<String?> uploadImage(Uint8List bytes) async {
+              try {
+                final authProvider = Provider.of<AuthProvider>(context, listen: false);
+                final supabase = authProvider.supabaseClient;
+                final fileName = 'product_${DateTime.now().millisecondsSinceEpoch}.jpg';
+                await supabase.storage.from('product-images').uploadBinary(fileName, bytes);
+                return supabase.storage.from('product-images').getPublicUrl(fileName);
+              } catch (e) {
+                debugPrint('Image upload error: $e');
+                return null;
+              }
+            }
+
+            return AlertDialog(
+              title: const Text('Edit Product'),
+              content: SingleChildScrollView(
+                child: Form(
+                  key: formKey,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      TextFormField(
+                        controller: nameController,
+                        decoration: const InputDecoration(labelText: 'Name'),
+                        validator: (v) => v == null || v.isEmpty ? 'Enter name' : null,
+                      ),
+                      const SizedBox(height: 12),
+                      TextFormField(
+                        controller: descController,
+                        decoration: const InputDecoration(labelText: 'Description'),
+                        validator: (v) => v == null || v.isEmpty ? 'Enter description' : null,
+                      ),
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          ElevatedButton.icon(
+                            onPressed: pickImage,
+                            icon: const Icon(Icons.image),
+                            label: const Text('Pick Image'),
+                          ),
+                          const SizedBox(width: 8),
+                          if (imageBytes != null)
+                            SizedBox(
+                              width: 56,
+                              height: 56,
+                              child: Image.memory(imageBytes!, fit: BoxFit.cover),
+                            )
+                          else if (product.imageUrl.isNotEmpty)
+                            SizedBox(
+                              width: 56,
+                              height: 56,
+                              child: Image.network(product.imageUrl, fit: BoxFit.cover),
+                            ),
+                        ],
+                      ),
+                      if (imageBytes == null)
+                        TextFormField(
+                          controller: imageUrlController,
+                          decoration: const InputDecoration(labelText: 'Image URL'),
+                          validator: (v) => v == null || v.isEmpty ? 'Pick image or enter URL' : null,
+                        ),
+                      const SizedBox(height: 12),
+                      TextFormField(
+                        controller: priceController,
+                        decoration: const InputDecoration(labelText: 'Price'),
+                        keyboardType: TextInputType.number,
+                        validator: (v) => v == null || v.isEmpty ? 'Enter price' : null,
+                      ),
+                      const SizedBox(height: 12),
+                      DropdownButtonFormField<String>(
+                        value: selectedCategoryId,
+                        hint: const Text('Select Category'),
+                        items: _categories.map((category) {
+                          return DropdownMenuItem<String>(
+                            value: category['id'],
+                            child: Text(category['name']),
+                          );
+                        }).toList(),
+                        onChanged: (val) => setState(() => selectedCategoryId = val),
+                        validator: (val) => val == null ? 'Select category' : null,
+                      ),
+                      const SizedBox(height: 12),
+                      DropdownButtonFormField<bool>(
+                        value: isAvailable,
+                        decoration: const InputDecoration(labelText: 'Availability Status'),
+                        items: const [
+                          DropdownMenuItem(value: true, child: Text('Available')),
+                          DropdownMenuItem(value: false, child: Text('Not Available')),
+                        ],
+                        onChanged: (val) => setState(() => isAvailable = val ?? true),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: const Text('Cancel'),
+                ),
+                ElevatedButton(
+                  onPressed: isSubmitting
+                      ? null
+                      : () async {
+                          if (formKey.currentState?.validate() ?? false) {
+                            setState(() => isSubmitting = true);
+                            String imageUrl = imageUrlController.text;
+                            if (imageBytes != null) {
+                              final uploaded = await uploadImage(imageBytes!);
+                              if (uploaded != null) {
+                                imageUrl = uploaded;
+                              } else {
+                                setState(() => isSubmitting = false);
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(content: Text('Image upload failed')),
+                                );
+                                return;
+                              }
+                            }
+                            try {
+                              final authProvider = Provider.of<AuthProvider>(context, listen: false);
+                              final supabase = authProvider.supabaseClient;
+                              final result = await supabase.from('products').update({
+                                'name': nameController.text,
+                                'description': descController.text,
+                                'image_url': imageUrl,
+                                'price': double.parse(priceController.text),
+                                'category_id': selectedCategoryId,
+                                'is_available': isAvailable,
+                              }).eq('id', product.id).select();
+                              if (mounted) {
+                                // ignore: unnecessary_type_check
+                                if (result is List && result.isNotEmpty) {
+                                  Navigator.of(context).pop();
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(content: Text('Product updated successfully')),
+                                  );
+                                  _loadProducts();
+                                } else {
+                                  setState(() => isSubmitting = false);
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(content: Text('Update failed: No rows affected. Check RLS policies and product ID.')),
+                                  );
+                                }
+                              }
+                            } catch (e) {
+                              setState(() => isSubmitting = false);
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text('Error: $e')),
+                              );
+                            }
+                          }
+                        },
+                  child: isSubmitting
+                      ? const CircularProgressIndicator()
+                      : const Text('Save'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Future<void> _showDeleteProductDialog(Product product) async {
+    bool isSubmitting = false;
+    await showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: const Text('Delete Product'),
+              content: Text('Are you sure you want to delete "${product.name}"?'),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: const Text('Cancel'),
+                ),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Theme.of(context).colorScheme.error,
+                  ),
+                  onPressed: isSubmitting
+                      ? null
+                      : () async {
+                          setState(() => isSubmitting = true);
+                          try {
+                            final authProvider = Provider.of<AuthProvider>(context, listen: false);
+                            final supabase = authProvider.supabaseClient;
+                            final result = await supabase.from('products').delete().eq('id', product.id).select();
+                            if (mounted) {
+                              // ignore: unnecessary_type_check
+                              if (result is List && result.isNotEmpty) {
+                                Navigator.of(context).pop();
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(content: Text('Product deleted successfully')),
+                                );
+                                _loadProducts();
+                              } else {
+                                setState(() => isSubmitting = false);
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(content: Text('Delete failed: No rows affected. Check RLS policies and product ID.')),
+                                );
+                              }
+                            }
+                          } catch (e) {
+                            setState(() => isSubmitting = false);
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text('Error: $e')),
+                            );
+                          }
+                        },
+                  child: isSubmitting
+                      ? const CircularProgressIndicator()
+                      : const Text('Delete'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+}
