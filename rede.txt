@@ -1,3 +1,29 @@
 command to make a web 
 
 flutter build web --base-href="/el_hayes_admin_panel/"
+
+
+
+
+the file in this path : 
+√ Built buildout\web   
+
+
+ثم انسخ الملفات من build/web إلى docs:
+
+
+rm -rf docs/*
+cp -r build/web/* docs
+
+
+
+git add .
+git commit -m "Fix base href for GitHub Pages"
+git push
+
+
+
+
+link of chat 
+
+https://chatgpt.com/share/686e5e57-22f4-8010-aef3-6369b1db8f90
