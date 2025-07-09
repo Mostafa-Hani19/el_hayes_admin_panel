@@ -143,17 +143,17 @@ class _ModernSupportMessageCardState extends State<_ModernSupportMessageCard> {
         curve: Curves.easeInOut,
         margin: EdgeInsets.symmetric(horizontal: widget.isMobile ? 8 : 16, vertical: widget.isMobile ? 4 : 8),
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(_hovering ? 0.98 : 0.93),
+          color: _hovering ? const Color(0xFFE6C785) : const Color(0xFFFFF8E1),
           borderRadius: BorderRadius.circular(18),
           boxShadow: [
             BoxShadow(
-              color: _hovering ? Colors.blue.withOpacity(0.13) : Colors.grey.withOpacity(0.08),
+              color: _hovering ? const Color(0xFFE6C785).withOpacity(0.22) : const Color(0xFFE6C785).withOpacity(0.10),
               blurRadius: _hovering ? 14 : 8,
               offset: const Offset(0, 4),
             ),
           ],
           border: Border.all(
-            color: _hovering ? Colors.blue.withOpacity(0.18) : Colors.transparent,
+            color: _hovering ? const Color(0xFFE6C785).withOpacity(0.28) : Colors.transparent,
             width: 1.1,
           ),
         ),

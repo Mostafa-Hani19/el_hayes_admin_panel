@@ -1,13 +1,15 @@
+// ignore_for_file: deprecated_member_use
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class ThemeConfig {
   // Colors
-  static const Color primaryColor = Color(0xFF1E88E5);
-  static const Color secondaryColor = Color(0xFF26A69A);
-  static const Color accentColor = Color(0xFFFFA000);
-  static const Color backgroundColor = Color(0xFFF5F5F5);
-  static const Color cardColor = Colors.white;
+  static const Color primaryColor = Color(0xFFE6C785);
+  static const Color secondaryColor = Color(0xFFD6B36A);
+  static const Color accentColor = Color(0xFFFFF8E1);
+  static const Color backgroundColor = Color(0xFFFFF8E1);
+  static const Color cardColor = Color(0xFFFFFBEA);
   static const Color errorColor = Color(0xFFE53935);
   static const Color successColor = Color(0xFF43A047);
   static const Color textPrimaryColor = Color(0xFF212121);
@@ -23,7 +25,6 @@ class ThemeConfig {
         primary: primaryColor,
         secondary: secondaryColor,
         error: errorColor,
-        // ignore: deprecated_member_use
         background: backgroundColor,
       ),
       scaffoldBackgroundColor: backgroundColor,
@@ -31,17 +32,18 @@ class ThemeConfig {
         color: cardColor,
         elevation: 2,
         margin: EdgeInsets.all(8),
+        shadowColor: primaryColor.withOpacity(0.10),
       ),
       textTheme: GoogleFonts.poppinsTextTheme(),
       appBarTheme: AppBarTheme(
         backgroundColor: primaryColor,
-        foregroundColor: Colors.white,
-        elevation: 0,
+        foregroundColor: Colors.black87,
+        elevation: 0.5,
         centerTitle: true,
         titleTextStyle: GoogleFonts.poppins(
           fontSize: 20,
           fontWeight: FontWeight.w600,
-          color: Colors.white,
+          color: Colors.black87,
         ),
       ),
       buttonTheme: const ButtonThemeData(
@@ -51,7 +53,7 @@ class ThemeConfig {
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           backgroundColor: primaryColor,
-          foregroundColor: Colors.white,
+          foregroundColor: Colors.black87,
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(8),
@@ -60,14 +62,14 @@ class ThemeConfig {
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: Colors.white,
+        fillColor: cardColor,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
-          borderSide: const BorderSide(color: Colors.grey),
+          borderSide: BorderSide(color: secondaryColor.withOpacity(0.4)),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
-          borderSide: const BorderSide(color: Colors.grey),
+          borderSide: BorderSide(color: secondaryColor.withOpacity(0.4)),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
@@ -92,25 +94,25 @@ class ThemeConfig {
         primary: primaryColor,
         secondary: secondaryColor,
         error: errorColor,
-        // ignore: deprecated_member_use
-        background: const Color(0xFF121212),
+        background: const Color(0xFF23200E),
       ),
-      scaffoldBackgroundColor: const Color(0xFF121212),
+      scaffoldBackgroundColor: const Color(0xFF23200E),
       cardTheme: const CardThemeData(
-        color: Color(0xFF1E1E1E),
+        color: Color(0xFF2D260F),
         elevation: 2,
         margin: EdgeInsets.all(8),
+        shadowColor: Color(0xFFE6C785),
       ),
       textTheme: GoogleFonts.poppinsTextTheme(ThemeData.dark().textTheme),
       appBarTheme: AppBarTheme(
-        backgroundColor: const Color(0xFF1E1E1E),
-        foregroundColor: Colors.white,
-        elevation: 0,
+        backgroundColor: const Color(0xFF2D260F),
+        foregroundColor: Color(0xFFE6C785),
+        elevation: 0.5,
         centerTitle: true,
         titleTextStyle: GoogleFonts.poppins(
           fontSize: 20,
           fontWeight: FontWeight.w600,
-          color: Colors.white,
+          color: Color(0xFFE6C785),
         ),
       ),
       buttonTheme: const ButtonThemeData(
@@ -120,7 +122,7 @@ class ThemeConfig {
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           backgroundColor: primaryColor,
-          foregroundColor: Colors.white,
+          foregroundColor: Colors.black87,
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(8),
@@ -129,14 +131,14 @@ class ThemeConfig {
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: const Color(0xFF2C2C2C),
+        fillColor: const Color(0xFF2D260F),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
-          borderSide: const BorderSide(color: Color(0xFF424242)),
+          borderSide: BorderSide(color: secondaryColor.withOpacity(0.4)),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
-          borderSide: const BorderSide(color: Color(0xFF424242)),
+          borderSide: BorderSide(color: secondaryColor.withOpacity(0.4)),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),

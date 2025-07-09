@@ -801,6 +801,14 @@ class _ProductsScreenState extends State<ProductsScreen> {
               }
             }
 
+            // Before building the DropdownButtonFormField, ensure selectedCategoryId is valid
+            final categoryIds = _categories.map((c) => c['id']).toSet();
+            if (selectedCategoryId != null && !categoryIds.contains(selectedCategoryId)) {
+              selectedCategoryId = null;
+            }
+            // Remove duplicate categories by ID
+            final uniqueCategories = _categories.toSet().toList();
+
             return AlertDialog(
               title: const Text('Edit Product'),
               content: SingleChildScrollView(
@@ -882,7 +890,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
                       DropdownButtonFormField<String>(
                         value: selectedCategoryId,
                         hint: const Text('Select Category'),
-                        items: _categories.map((category) {
+                        items: uniqueCategories.map((category) {
                           return DropdownMenuItem<String>(
                             value: category['id'],
                             child: Text(category['name']),

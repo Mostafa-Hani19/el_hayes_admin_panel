@@ -458,7 +458,7 @@ class _ModernDashboardCardState extends State<_ModernDashboardCard> {
                     ? widget.color.withOpacity(0.18)
                     : Colors.grey.withOpacity(0.10),
                 blurRadius: _hovering && isDesktop ? 18 : 10,
-                offset: const Offset(0, 6),
+                offset: const Offset(0, 16),
               ),
             ],
             border: Border.all(

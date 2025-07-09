@@ -61,7 +61,7 @@ class SidebarMenu extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 20),
               decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.primary,
+                color: const Color(0xFFE6C785),
                 borderRadius: isDesktop
                     ? const BorderRadius.only(
                         topRight: Radius.circular(24),
@@ -78,7 +78,7 @@ class SidebarMenu extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 28,
                         fontWeight: FontWeight.bold,
-                        color: Theme.of(context).colorScheme.primary,
+                        color: const Color(0xFFE6C785),
                       ),
                     ),
                   ),
@@ -90,7 +90,7 @@ class SidebarMenu extends StatelessWidget {
                         Text(
                           Constants.appName,
                           style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                                color: Colors.white,
+                                color: Colors.black87,
                                 fontWeight: FontWeight.bold,
                               ),
                           maxLines: 1,
@@ -100,7 +100,7 @@ class SidebarMenu extends StatelessWidget {
                         Text(
                           authProvider.currentUser?.fullName ?? 'Admin',
                           style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                color: Colors.white,
+                                color: Colors.black87,
                                 fontWeight: FontWeight.w500,
                               ),
                           maxLines: 1,
@@ -109,7 +109,7 @@ class SidebarMenu extends StatelessWidget {
                         Text(
                           authProvider.currentUser?.email ?? '',
                           style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                color: Colors.white.withAlpha(204),
+                                color: Colors.black54,
                               ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
@@ -245,24 +245,29 @@ class SidebarMenu extends StatelessWidget {
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 150),
         decoration: BoxDecoration(
-          color: isActive ? Theme.of(context).colorScheme.primary.withOpacity(0.08) : null,
+          color: isActive ? const Color(0xFFE6C785).withOpacity(0.55) : null,
           borderRadius: BorderRadius.circular(12),
         ),
         margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
         child: ListTile(
           leading: Icon(
             icon,
-            color: isActive ? Theme.of(context).colorScheme.primary : Colors.grey[700],
+            color: isActive ? Colors.black87 : Colors.grey[700],
           ),
           title: Text(
             title,
             style: TextStyle(
-              color: isActive ? Theme.of(context).colorScheme.primary : Colors.grey[900],
-              fontWeight: isActive ? FontWeight.bold : FontWeight.w500,
+              color: isActive ? Colors.black87 : Colors.grey[900],
+              fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
               fontSize: isDesktop ? 16 : 15,
               fontFamily: 'Cairo',
             ),
           ),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+          ),
+          tileColor: isActive ? const Color(0xFFE6C785).withOpacity(0.55) : null,
+          hoverColor: Theme.of(context).colorScheme.primary.withOpacity(0.12),
           onTap: () {
             if (route == 'send_notification') {
               _showSendNotificationDialog(context);
@@ -272,7 +277,6 @@ class SidebarMenu extends StatelessWidget {
               context.go(route);
             }
           },
-          hoverColor: Theme.of(context).colorScheme.primary.withOpacity(0.12),
         ),
       ),
     );
