@@ -1,4 +1,3 @@
-import 'package:el_hayes_admin_panel/widgets/top_selling_card.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
@@ -6,6 +5,8 @@ import '../utils/constants.dart';
 import '../widgets/dashboard_card.dart';
 import '../widgets/sidebar_menu.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../widgets/monthly_comparison_table.dart';
+import '../widgets/top_selling_products_table.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -23,11 +24,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
   int _prevOrderCount = 0;
   int _prevProductCount = 0;
   double _prevRevenue = 0.0;
+  // ignore: unused_field
   List<Activity> _activities = [];
   bool _isLoadingUsers = false;
   bool _isLoadingOrders = false;
   bool _isLoadingProducts = false;
   bool _isLoadingRevenue = false;
+  // ignore: unused_field
   bool _isLoadingActivities = false;
 
   @override
@@ -234,6 +237,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   @override
   Widget build(BuildContext context) {
     final authProvider = Provider.of<AuthProvider>(context);
+    // ignore: unused_local_variable
     final isDesktop = Constants.isDesktop(context);
     final isTablet = Constants.isTablet(context);
     final isMobile = Constants.isMobile(context);
@@ -264,12 +268,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     style: Theme.of(context).textTheme.headlineSmall,
                   ),
                   const SizedBox(height: Constants.defaultPadding),
-                  Text(
-                    'Dashboard Overview',
-                    style: Theme.of(context).textTheme.titleLarge,
-                  ),
-                  const SizedBox(height: Constants.defaultPadding),
                   _buildResponsiveGrid(isMobile, isTablet),
+                  MonthlyComparisonTable(
+                    orderThisMonth: _orderCount,
+                    orderLastMonth: _prevOrderCount,
+                    orderPercent: _calcPercentage(_orderCount, _prevOrderCount),
+                    revenueThisMonth: _revenue,
+                    revenueLastMonth: _prevRevenue,
+                    revenuePercent: _calcPercentage(_revenue, _prevRevenue),
+                  ),
+                  const TopSellingProductsTable(),
                 ],
               ),
             ),
@@ -335,7 +343,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               percentage: !_isLoadingRevenue ? _calcPercentage(_revenue, _prevRevenue) : null,
               isIncrease: _revenue >= _prevRevenue,
             ),
-                const TopSellingProductsCard(),
+                // const TopSellingProductsTabel(),
 
           ],
         );
@@ -362,6 +370,7 @@ class Activity {
   }
 }
 
+// ignore: unused_element
 class _ActivityList extends StatelessWidget {
   final List<Activity> activities;
   final bool isLoading;

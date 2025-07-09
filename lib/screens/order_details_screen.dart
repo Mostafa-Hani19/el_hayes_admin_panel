@@ -1,3 +1,5 @@
+// ignore_for_file: depend_on_referenced_packages, use_build_context_synchronously
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
@@ -7,7 +9,6 @@ import 'package:pdf/widgets.dart' as pw;
 import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart' show rootBundle;
-import 'package:flutter/rendering.dart';
 import '../widgets/sidebar_menu.dart';
 import '../utils/constants.dart';
 
@@ -64,7 +65,7 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
           .maybeSingle();
       final itemsResp = await supabase
           .from('order_items')
-          .select('*, products:products(id, name, image_url)')
+          .select('*, products:products(id, name, image_url, code)')
           .eq('order_id', widget.orderId);
       setState(() {
         _order = orderResp;

@@ -33,6 +33,7 @@ class _SupportMessagesScreenState extends State<SupportMessagesScreen> {
     });
   }
 
+  // ignore: unused_element
   Future<void> _respondToMessage(String messageId, String reply) async {
     await supabase.from('support_messages').update({
       'response_text': reply,

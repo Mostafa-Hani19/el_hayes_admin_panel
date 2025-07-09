@@ -23,6 +23,7 @@ class ThemeConfig {
         primary: primaryColor,
         secondary: secondaryColor,
         error: errorColor,
+        // ignore: deprecated_member_use
         background: backgroundColor,
       ),
       scaffoldBackgroundColor: backgroundColor,
@@ -91,6 +92,7 @@ class ThemeConfig {
         primary: primaryColor,
         secondary: secondaryColor,
         error: errorColor,
+        // ignore: deprecated_member_use
         background: const Color(0xFF121212),
       ),
       scaffoldBackgroundColor: const Color(0xFF121212),

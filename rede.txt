@@ -1,0 +1,3 @@
+command to make a web 
+
+flutter build web --base-href="/el_hayes_admin_panel/"

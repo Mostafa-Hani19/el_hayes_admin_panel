@@ -1,7 +1,8 @@
+// ignore_for_file: use_build_context_synchronously, deprecated_member_use
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:file_picker/file_picker.dart';
-import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import '../providers/auth_provider.dart';
 import '../widgets/sidebar_menu.dart';
 import '../utils/constants.dart';
@@ -129,53 +130,6 @@ class _BannersScreenState extends State<BannersScreen> {
           //   setState(() => bgColor = picked);
           // }
 
-          Future<void> pickTextColor() async {
-            Color picked = textColor;
-            final hexController = TextEditingController(text: '#${textColor.value.toRadixString(16).substring(2).toUpperCase()}');
-            await showDialog(
-              context: context,
-              builder: (context) => AlertDialog(
-                title: const Text('Pick Text Color'),
-                content: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    ColorPicker(
-                      pickerColor: picked,
-                      onColorChanged: (color) {
-                        picked = color;
-                        hexController.text = '#${color.value.toRadixString(16).substring(2).toUpperCase()}';
-                      },
-                      enableAlpha: false,
-                      displayThumbColor: true,
-                      showLabel: true,
-                      pickerAreaHeightPercent: 0.7,
-                    ),
-                    const SizedBox(height: 8),
-                    TextField(
-                      controller: hexController,
-                      decoration: const InputDecoration(labelText: 'Hex'),
-                      onChanged: (value) {
-                        try {
-                          String v = value;
-                          if (v.startsWith('#')) v = v.substring(1);
-                          if (v.length == 6) v = 'FF$v';
-                          final color = Color(int.parse(v, radix: 16));
-                          picked = color;
-                        } catch (_) {}
-                      },
-                    ),
-                  ],
-                ),
-                actions: [
-                  TextButton(
-                    child: const Text('Select'),
-                    onPressed: () => Navigator.of(context).pop(),
-                  ),
-                ],
-              ),
-            );
-            setState(() => textColor = picked);
-          }
 
           return AlertDialog(
             title: const Text('Add Banner'),

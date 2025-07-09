@@ -19,7 +19,6 @@ import 'screens/order_details_screen.dart';
 import 'screens/support_messages_screen.dart';
 import 'services/auth_service.dart';
 import 'utils/constants.dart';
-import 'screens/orders_screen.dart' show ordersStreamProvider;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();

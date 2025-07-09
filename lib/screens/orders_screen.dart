@@ -1,10 +1,8 @@
+// ignore_for_file: use_build_context_synchronously, unnecessary_null_comparison
+
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
-import '../providers/auth_provider.dart';
 import '../widgets/sidebar_menu.dart';
-import '../utils/constants.dart';
-import 'order_details_screen.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'dart:async';
 import '../models/order_model.dart';
@@ -21,7 +19,6 @@ class _OrdersScreenState extends State<OrdersScreen> {
   String _statusFilter = 'all';
   DateTime? _fromDate;
   DateTime? _toDate;
-  String? _error;
 
   @override
   void dispose() {
