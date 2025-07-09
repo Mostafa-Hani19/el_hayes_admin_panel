@@ -1,4 +1,4 @@
-// ignore_for_file: use_build_context_synchronously
+// ignore_for_file: use_build_context_synchronously, deprecated_member_use
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -458,12 +458,19 @@ class _UsersScreenState extends State<UsersScreen> {
     final maxContentWidth = isDesktop ? 1100.0 : isTablet ? 800.0 : double.infinity;
     final horizontalPadding = isMobile ? 4.0 : isTablet ? 16.0 : 32.0;
     final verticalPadding = isMobile ? 4.0 : isTablet ? 8.0 : 24.0;
+    final Color bgGradientStart = Colors.grey[100]!;
+    final Color bgGradientEnd = Colors.blueGrey[50]!;
 
     return Scaffold(
+      extendBodyBehindAppBar: false,
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
         title: const Text('User Management'),
+        centerTitle: true,
         automaticallyImplyLeading: false,
         leading: isMobile ? const SidebarMenu() : null,
+        backgroundColor: Colors.white.withOpacity(0.85),
+        elevation: 0.5,
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
@@ -479,76 +486,88 @@ class _UsersScreenState extends State<UsersScreen> {
         child: const Icon(Icons.add),
       ),
       drawer: isMobile ? const SidebarMenu() : null,
-      body: LayoutBuilder(
-        builder: (context, constraints) {
-          return Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              if (!isMobile) const SidebarMenu(),
-              Expanded(
-                child: Center(
-                  child: ConstrainedBox(
-                    constraints: BoxConstraints(
-                      maxWidth: maxContentWidth,
-                    ),
-                    child: Padding(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: horizontalPadding,
-                        vertical: verticalPadding,
+      body: Container(
+        width: double.infinity,
+        height: double.infinity,
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [bgGradientStart, bgGradientEnd],
+          ),
+        ),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            return Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (!isMobile) const SidebarMenu(),
+                Expanded(
+                  child: Center(
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(
+                        maxWidth: maxContentWidth,
                       ),
-                      child: _isLoading
-                        ? const Center(child: CircularProgressIndicator())
-                        : _error != null
-                          ? Center(
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Text(
-                                    'Error loading users',
-                                    style: TextStyle(
-                                      fontSize: isMobile ? 16 : 20,
-                                      fontWeight: FontWeight.bold,
-                                      color: Theme.of(context).colorScheme.error,
+                      child: Padding(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: horizontalPadding,
+                          vertical: verticalPadding,
+                        ),
+                        child: _isLoading
+                          ? const Center(child: CircularProgressIndicator())
+                          : _error != null
+                            ? Center(
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Text(
+                                      'Error loading users',
+                                      style: TextStyle(
+                                        fontSize: isMobile ? 16 : 20,
+                                        fontWeight: FontWeight.bold,
+                                        color: Theme.of(context).colorScheme.error,
+                                      ),
                                     ),
+                                    const SizedBox(height: 8),
+                                    Text(_error!),
+                                    const SizedBox(height: 16),
+                                    ElevatedButton.icon(
+                                      onPressed: _loadUsers,
+                                      icon: const Icon(Icons.refresh),
+                                      label: const Text('Retry'),
+                                    ),
+                                  ],
+                                ),
+                              )
+                            : Column(
+                                children: [
+                                  Padding(
+                                    padding: EdgeInsets.all(isMobile ? 8.0 : isTablet ? 12.0 : 20.0),
+                                    child: isMobile
+                                      ? Column(
+                                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                                          children: _buildFilterRow(isMobile, isTablet),
+                                        )
+                                      : Row(
+                                          children: _buildFilterRow(isMobile, isTablet),
+                                        ),
                                   ),
-                                  const SizedBox(height: 8),
-                                  Text(_error!),
-                                  const SizedBox(height: 16),
-                                  ElevatedButton.icon(
-                                    onPressed: _loadUsers,
-                                    icon: const Icon(Icons.refresh),
-                                    label: const Text('Retry'),
+                                  Divider(height: isMobile ? 18 : 32, thickness: 1.2, color: Colors.blueGrey[100]),
+                                  Expanded(
+                                    child: _filteredUsers.isEmpty
+                                      ? const Center(child: Text('No users found'))
+                                      : _buildModernResponsiveLayout(isMobile, isTablet, isDesktop),
                                   ),
                                 ],
                               ),
-                            )
-                          : Column(
-                              children: [
-                                Padding(
-                                  padding: EdgeInsets.all(isMobile ? 8.0 : isTablet ? 12.0 : 20.0),
-                                  child: isMobile
-                                    ? Column(
-                                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                                        children: _buildFilterRow(isMobile, isTablet),
-                                      )
-                                    : Row(
-                                        children: _buildFilterRow(isMobile, isTablet),
-                                      ),
-                                ),
-                                Expanded(
-                                  child: _filteredUsers.isEmpty
-                                    ? const Center(child: Text('No users found'))
-                                    : _buildResponsiveLayout(isMobile, isTablet, isDesktop),
-                                ),
-                              ],
-                            ),
+                      ),
                     ),
                   ),
                 ),
-              ),
-            ],
-          );
-        },
+              ],
+            );
+          },
+        ),
       ),
     );
   }
@@ -596,13 +615,13 @@ class _UsersScreenState extends State<UsersScreen> {
     ];
   }
 
-  Widget _buildResponsiveLayout(bool isMobile, bool isTablet, [bool isDesktop = false]) {
+  Widget _buildModernResponsiveLayout(bool isMobile, bool isTablet, [bool isDesktop = false]) {
     if (isMobile) {
       return ListView.builder(
         itemCount: _filteredUsers.length,
         itemBuilder: (context, index) {
           final user = _filteredUsers[index];
-          return _buildUserListItem(user, isMobile, isTablet, isDesktop);
+          return _ModernUserListItem(user: user, isMobile: isMobile, isTablet: isTablet, isDesktop: isDesktop, onToggleUserStatus: _toggleUserStatus, onDeleteUser: _deleteUser);
         },
       );
     } else {
@@ -612,6 +631,9 @@ class _UsersScreenState extends State<UsersScreen> {
           scrollDirection: Axis.horizontal,
           child: DataTable(
             columnSpacing: isDesktop ? 32 : isTablet ? 20 : 12,
+            headingRowColor: MaterialStateProperty.all(Colors.blueGrey[50]),
+            headingTextStyle: TextStyle(fontWeight: FontWeight.bold, fontSize: isDesktop ? 18 : 16, color: Colors.blueGrey[900], fontFamily: 'Cairo'),
+            dataTextStyle: TextStyle(fontSize: isDesktop ? 16 : 14, color: Colors.blueGrey[800], fontFamily: 'Cairo'),
             columns: const [
               DataColumn(label: Text('Name')),
               DataColumn(label: Text('Email')),
@@ -665,46 +687,97 @@ class _UsersScreenState extends State<UsersScreen> {
       );
     }
   }
+}
 
-  Widget _buildUserListItem(UserModel user, bool isMobile, bool isTablet, bool isDesktop) {
-    return Card(
-      margin: EdgeInsets.symmetric(horizontal: isMobile ? 8 : 16, vertical: isMobile ? 4 : 8),
-      child: ListTile(
-        leading: CircleAvatar(
-          backgroundColor: user.role == 'admin' ? Colors.red.shade100 : Colors.blue.shade100,
-          child: Icon(
-            user.role == 'admin' ? Icons.admin_panel_settings : Icons.person,
-            color: user.role == 'admin' ? Colors.red : Colors.blue,
+class _ModernUserListItem extends StatefulWidget {
+  final UserModel user;
+  final bool isMobile;
+  final bool isTablet;
+  final bool isDesktop;
+  final Function(UserModel) onToggleUserStatus;
+  final Function(UserModel) onDeleteUser;
+
+  const _ModernUserListItem({
+    required this.user,
+    required this.isMobile,
+    required this.isTablet,
+    required this.isDesktop,
+    required this.onToggleUserStatus,
+    required this.onDeleteUser,
+  });
+
+  @override
+  State<_ModernUserListItem> createState() => _ModernUserListItemState();
+}
+
+class _ModernUserListItemState extends State<_ModernUserListItem> {
+  bool _hovering = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return MouseRegion(
+      onEnter: (_) => setState(() => _hovering = true),
+      onExit: (_) => setState(() => _hovering = false),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        curve: Curves.easeInOut,
+        margin: EdgeInsets.symmetric(horizontal: widget.isMobile ? 8 : 16, vertical: widget.isMobile ? 4 : 8),
+        decoration: BoxDecoration(
+          color: Colors.white.withOpacity(_hovering && widget.isDesktop ? 0.98 : 0.93),
+          borderRadius: BorderRadius.circular(18),
+          boxShadow: [
+            BoxShadow(
+              color: _hovering && widget.isDesktop
+                  ? Colors.blue.withOpacity(0.13)
+                  : Colors.grey.withOpacity(0.08),
+              blurRadius: _hovering && widget.isDesktop ? 14 : 8,
+              offset: const Offset(0, 4),
+            ),
+          ],
+          border: Border.all(
+            color: _hovering && widget.isDesktop
+                ? Colors.blue.withOpacity(0.18)
+                : Colors.transparent,
+            width: 1.1,
           ),
         ),
-        title: Text(user.fullName ?? 'N/A', style: TextStyle(fontSize: isMobile ? 15 : 17, fontWeight: FontWeight.bold)),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(user.email, style: TextStyle(fontSize: isMobile ? 13 : 15)),
-            Text(
-              'Registered: ${DateFormat('MMM d, yyyy').format(user.createdAt)}',
-              style: TextStyle(fontSize: isMobile ? 11 : 13, color: Colors.grey.shade600),
+        child: ListTile(
+          leading: CircleAvatar(
+            backgroundColor: widget.user.role == 'admin' ? Colors.red.shade100 : Colors.blue.shade100,
+            child: Icon(
+              widget.user.role == 'admin' ? Icons.admin_panel_settings : Icons.person,
+              color: widget.user.role == 'admin' ? Colors.red : Colors.blue,
             ),
-          ],
-        ),
-        trailing: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            IconButton(
-              icon: Icon(
-                user.role == 'admin' ? Icons.person : Icons.admin_panel_settings,
-                color: user.role == 'admin' ? Colors.blue : Colors.red,
+          ),
+          title: Text(widget.user.fullName ?? 'N/A', style: TextStyle(fontSize: widget.isMobile ? 15 : 17, fontWeight: FontWeight.bold)),
+          subtitle: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(widget.user.email, style: TextStyle(fontSize: widget.isMobile ? 13 : 15)),
+              Text(
+                'Registered: ${DateFormat('MMM d, yyyy').format(widget.user.createdAt)}',
+                style: TextStyle(fontSize: widget.isMobile ? 11 : 13, color: Colors.grey.shade600),
               ),
-              tooltip: user.role == 'admin' ? 'Demote to Customer' : 'Promote to Admin',
-              onPressed: () => _toggleUserStatus(user),
-            ),
-            IconButton(
-              icon: const Icon(Icons.delete, color: Colors.red),
-              tooltip: 'Delete User',
-              onPressed: () => _deleteUser(user),
-            ),
-          ],
+            ],
+          ),
+          trailing: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              IconButton(
+                icon: Icon(
+                  widget.user.role == 'admin' ? Icons.person : Icons.admin_panel_settings,
+                  color: widget.user.role == 'admin' ? Colors.blue : Colors.red,
+                ),
+                tooltip: widget.user.role == 'admin' ? 'Demote to Customer' : 'Promote to Admin',
+                onPressed: () => widget.onToggleUserStatus(widget.user),
+              ),
+              IconButton(
+                icon: const Icon(Icons.delete, color: Colors.red),
+                tooltip: 'Delete User',
+                onPressed: () => widget.onDeleteUser(widget.user),
+              ),
+            ],
+          ),
         ),
       ),
     );

@@ -11,6 +11,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import '../widgets/sidebar_menu.dart';
 import '../utils/constants.dart';
+import 'package:go_router/go_router.dart';
 
 class OrderDetailsScreen extends StatefulWidget {
   static const String routeName = '/order_details';
@@ -125,7 +126,7 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () {
-            Navigator.pushReplacementNamed(context, Constants.ordersRoute);
+            context.go(Constants.ordersRoute);
           },
         ),
         actions: [

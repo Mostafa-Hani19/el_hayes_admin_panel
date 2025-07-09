@@ -1,4 +1,4 @@
-// ignore_for_file: use_build_context_synchronously
+// ignore_for_file: use_build_context_synchronously, deprecated_member_use
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -91,117 +91,214 @@ class _NotificationScreenState extends State<NotificationScreen> {
     final maxContentWidth = 700.0;
 
     return Scaffold(
+      extendBodyBehindAppBar: false,
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
         title: const Text('Notifications'),
+        centerTitle: true,
         automaticallyImplyLeading: false,
         leading: isMobile ? const SidebarMenu() : null,
+        backgroundColor: Colors.white.withOpacity(0.85),
+        elevation: 0.5,
       ),
       drawer: isMobile ? const SidebarMenu() : null,
-      body: LayoutBuilder(
-        builder: (context, constraints) {
-          return Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              if (!isMobile) const SidebarMenu(),
-              Expanded(
-                child: Center(
-                  child: ConstrainedBox(
-                    constraints: BoxConstraints(
-                      maxWidth: isMobile ? double.infinity : maxContentWidth,
-                    ),
-                    child: Padding(
-                      padding: EdgeInsets.all(isMobile ? 8.0 : 16.0),
-                      child: Column(
-                        children: [
-                          Card(
-                            child: Padding(
-                              padding: const EdgeInsets.all(16.0),
-                              child: Column(
-                                children: [
-                                  TextField(
-                                    controller: _titleController,
-                                    decoration: const InputDecoration(
-                                      labelText: 'Title',
-                                    ),
-                                  ),
-                                  SizedBox(height: isMobile ? 8 : 16),
-                                  TextField(
-                                    controller: _bodyController,
-                                    decoration: const InputDecoration(
-                                      labelText: 'Body',
-                                    ),
-                                  ),
-                                  const SizedBox(height: 8),
-                                  ElevatedButton(
-                                    onPressed: _isSending
-                                        ? null
-                                        : _sendNotification,
-                                    child: _isSending
-                                        ? const SizedBox(
-                                            width: 20,
-                                            height: 20,
-                                            child: CircularProgressIndicator(
-                                              strokeWidth: 2,
-                                            ),
-                                          )
-                                        : const Text('Send Notification'),
-                                  ),
-                                ],
+      body: Container(
+        width: double.infinity,
+        height: double.infinity,
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [Colors.grey[100]!, Colors.blueGrey[50]!],
+          ),
+        ),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            return Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (!isMobile) const SidebarMenu(),
+                Expanded(
+                  child: Center(
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(
+                        maxWidth: isMobile ? double.infinity : maxContentWidth,
+                      ),
+                      child: Padding(
+                        padding: EdgeInsets.all(isMobile ? 8.0 : 16.0),
+                        child: Column(
+                          children: [
+                            const SizedBox(height: 24),
+                            Divider(height: isMobile ? 18 : 32, thickness: 1.2, color: Colors.blueGrey[100]),
+                            _ModernNotificationForm(
+                              titleController: _titleController,
+                              bodyController: _bodyController,
+                              isSending: _isSending,
+                              onSend: _sendNotification,
+                              isMobile: isMobile,
+                            ),
+                            const SizedBox(height: 16),
+                            Expanded(
+                              child: FutureBuilder<List<dynamic>>(
+                                future: _fetchNotifications(),
+                                builder: (context, snapshot) {
+                                  if (!snapshot.hasData) {
+                                    return const Center(
+                                      child: CircularProgressIndicator(),
+                                    );
+                                  }
+                                  final notifications = snapshot.data!;
+                                  if (notifications.isEmpty) {
+                                    return const Center(
+                                      child: Text('No notifications sent.'),
+                                    );
+                                  }
+                                  return ListView.builder(
+                                    itemCount: notifications.length,
+                                    itemBuilder: (context, index) {
+                                      final notification = notifications[index];
+                                      return _ModernNotificationCard(
+                                        notification: notification,
+                                        onDelete: () => _deleteNotification(notification),
+                                        isMobile: isMobile,
+                                      );
+                                    },
+                                  );
+                                },
                               ),
                             ),
-                          ),
-                          const SizedBox(height: 16),
-                          Expanded(
-                            child: FutureBuilder<List<dynamic>>(
-                              future: _fetchNotifications(),
-                              builder: (context, snapshot) {
-                                if (!snapshot.hasData) {
-                                  return const Center(
-                                    child: CircularProgressIndicator(),
-                                  );
-                                }
-                                final notifications = snapshot.data!;
-                                if (notifications.isEmpty) {
-                                  return const Center(
-                                    child: Text('No notifications sent.'),
-                                  );
-                                }
-                                return ListView.builder(
-                                  itemCount: notifications.length,
-                                  itemBuilder: (context, index) {
-                                    final notification = notifications[index];
-                                    return Card(
-                                      child: ListTile(
-                                        title: Text(
-                                          notification['title'] ?? '',
-                                        ),
-                                        subtitle: Text(
-                                          notification['body'] ?? '',
-                                        ),
-                                        trailing: IconButton(
-                                          icon: const Icon(
-                                            Icons.delete,
-                                            color: Colors.red,
-                                          ),
-                                          onPressed: () =>
-                                              _deleteNotification(notification),
-                                        ),
-                                      ),
-                                    );
-                                  },
-                                );
-                              },
-                            ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
                   ),
                 ),
+              ],
+            );
+          },
+        ),
+      ),
+    );
+  }
+}
+
+class _ModernNotificationForm extends StatelessWidget {
+  final TextEditingController titleController;
+  final TextEditingController bodyController;
+  final bool isSending;
+  final VoidCallback onSend;
+  final bool isMobile;
+  const _ModernNotificationForm({required this.titleController, required this.bodyController, required this.isSending, required this.onSend, required this.isMobile});
+
+  @override
+  Widget build(BuildContext context) {
+    return MouseRegion(
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        curve: Curves.easeInOut,
+        decoration: BoxDecoration(
+          color: Colors.white.withOpacity(0.93),
+          borderRadius: BorderRadius.circular(18),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.blue.withOpacity(0.08),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        padding: const EdgeInsets.all(20),
+        margin: EdgeInsets.symmetric(horizontal: isMobile ? 8 : 16, vertical: isMobile ? 4 : 8),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            TextField(
+              controller: titleController,
+              decoration: const InputDecoration(
+                labelText: 'Title',
+                prefixIcon: Icon(Icons.title),
               ),
-            ],
-          );
-        },
+            ),
+            SizedBox(height: isMobile ? 8 : 16),
+            TextField(
+              controller: bodyController,
+              decoration: const InputDecoration(
+                labelText: 'Body',
+                prefixIcon: Icon(Icons.message),
+              ),
+            ),
+            const SizedBox(height: 8),
+            Align(
+              alignment: Alignment.centerRight,
+              child: ElevatedButton(
+                onPressed: isSending ? null : onSend,
+                child: isSending
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                        ),
+                      )
+                    : const Text('Send Notification'),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ModernNotificationCard extends StatefulWidget {
+  final Map<String, dynamic> notification;
+  final VoidCallback onDelete;
+  final bool isMobile;
+  const _ModernNotificationCard({required this.notification, required this.onDelete, required this.isMobile});
+
+  @override
+  State<_ModernNotificationCard> createState() => _ModernNotificationCardState();
+}
+
+class _ModernNotificationCardState extends State<_ModernNotificationCard> {
+  bool _hovering = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final n = widget.notification;
+    return MouseRegion(
+      onEnter: (_) => setState(() => _hovering = true),
+      onExit: (_) => setState(() => _hovering = false),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        curve: Curves.easeInOut,
+        margin: EdgeInsets.symmetric(horizontal: widget.isMobile ? 8 : 16, vertical: widget.isMobile ? 4 : 8),
+        decoration: BoxDecoration(
+          color: Colors.white.withOpacity(_hovering ? 0.98 : 0.93),
+          borderRadius: BorderRadius.circular(18),
+          boxShadow: [
+            BoxShadow(
+              color: _hovering ? Colors.blue.withOpacity(0.13) : Colors.grey.withOpacity(0.08),
+              blurRadius: _hovering ? 14 : 8,
+              offset: const Offset(0, 4),
+            ),
+          ],
+          border: Border.all(
+            color: _hovering ? Colors.blue.withOpacity(0.18) : Colors.transparent,
+            width: 1.1,
+          ),
+        ),
+        child: ListTile(
+          title: Text(
+            n['title'] ?? '',
+            style: const TextStyle(fontWeight: FontWeight.bold),
+          ),
+          subtitle: Text(n['body'] ?? ''),
+          trailing: IconButton(
+            icon: const Icon(Icons.delete, color: Colors.red),
+            onPressed: widget.onDelete,
+          ),
+        ),
       ),
     );
   }

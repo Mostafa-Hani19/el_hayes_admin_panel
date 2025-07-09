@@ -1,4 +1,4 @@
-// ignore_for_file: use_build_context_synchronously, deprecated_member_use
+// ignore_for_file: use_build_context_synchronously, deprecated_member_use, unused_local_variable
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -236,69 +236,149 @@ class _BannersScreenState extends State<BannersScreen> {
   @override
   Widget build(BuildContext context) {
     final isMobile = Constants.isMobile(context);
+    final isTablet = Constants.isTablet(context);
+    final isDesktop = Constants.isDesktop(context);
+    final Color bgGradientStart = Colors.grey[100]!;
+    final Color bgGradientEnd = Colors.blueGrey[50]!;
     return Scaffold(
-      appBar: AppBar(title: const Text('Banners'), automaticallyImplyLeading: false),
+      extendBodyBehindAppBar: false,
+      backgroundColor: Colors.transparent,
+      appBar: AppBar(
+        title: const Text('Banners'),
+        centerTitle: true,
+        automaticallyImplyLeading: false,
+        leading: isMobile ? const SidebarMenu() : null,
+        backgroundColor: Colors.white.withOpacity(0.85),
+        elevation: 0.5,
+      ),
       drawer: isMobile ? const SidebarMenu() : null,
       floatingActionButton: FloatingActionButton(
         onPressed: _showAddBannerDialog,
         tooltip: 'Add Banner',
         child: const Icon(Icons.add),
       ),
-      body: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (!isMobile) const SidebarMenu(),
-          Expanded(
-            child: _isLoading
-                ? const Center(child: CircularProgressIndicator())
-                : _banners.isEmpty
-                    ? const Center(child: Text('No banners found'))
-                    : ListView.builder(
-                        padding: const EdgeInsets.all(16),
-                        itemCount: _banners.length,
-                        itemBuilder: (context, i) {
-                          final b = _banners[i];
-                          return Card(
-                            color: b['background_color'] != null && b['background_color'].isNotEmpty
-                                ? Color(int.parse('0xff${b['background_color'].replaceAll('#', '')}'))
-                                : null,
-                            child: ListTile(
-                              leading: b['image_url'] != null && b['image_url'].isNotEmpty
-                                  ? Image.network(b['image_url'], width: 56, height: 56, fit: BoxFit.cover)
-                                  : const Icon(Icons.image, size: 56),
-                              title: Text(
-                                b['title'] ?? '',
-                                style: TextStyle(
-                                  color: b['text_color'] != null && b['text_color'].isNotEmpty
-                                      ? Color(int.parse('0xff${b['text_color'].replaceAll('#', '')}'))
-                                      : null,
-                                ),
-                              ),
-                              subtitle: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  if (b['subtitle'] != null && b['subtitle'].isNotEmpty)
-                                    Text(b['subtitle']),
-                                  if (b['discount'] != null && b['discount'].isNotEmpty)
-                                    Text('Discount: ${b['discount']}'),
-                                ],
-                              ),
-                              trailing: IconButton(
-                                icon: const Icon(Icons.delete, color: Colors.red),
-                                tooltip: 'Delete Banner',
-                                onPressed: () async {
-                                  final authProvider = Provider.of<AuthProvider>(context, listen: false);
-                                  final supabase = authProvider.supabaseClient;
-                                  await supabase.from('banners').delete().eq('id', b['id']);
-                                  _loadBanners();
+      body: Container(
+        width: double.infinity,
+        height: double.infinity,
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [bgGradientStart, bgGradientEnd],
+          ),
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (!isMobile) const SidebarMenu(),
+            Expanded(
+              child: _isLoading
+                  ? const Center(child: CircularProgressIndicator())
+                  : _banners.isEmpty
+                      ? const Center(child: Text('No banners found'))
+                      : Column(
+                          children: [
+                            const SizedBox(height: 24),
+                            Divider(height: isMobile ? 18 : 32, thickness: 1.2, color: Colors.blueGrey[100]),
+                            Expanded(
+                              child: ListView.builder(
+                                padding: const EdgeInsets.all(16),
+                                itemCount: _banners.length,
+                                itemBuilder: (context, i) {
+                                  final b = _banners[i];
+                                  return _ModernBannerCard(
+                                    banner: b,
+                                    onDelete: () async {
+                                      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+                                      final supabase = authProvider.supabaseClient;
+                                      await supabase.from('banners').delete().eq('id', b['id']);
+                                      _loadBanners();
+                                    },
+                                    isMobile: isMobile,
+                                  );
                                 },
                               ),
                             ),
-                          );
-                        },
-                      ),
+                          ],
+                        ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ModernBannerCard extends StatefulWidget {
+  final Map<String, dynamic> banner;
+  final VoidCallback onDelete;
+  final bool isMobile;
+  const _ModernBannerCard({required this.banner, required this.onDelete, required this.isMobile});
+
+  @override
+  State<_ModernBannerCard> createState() => _ModernBannerCardState();
+}
+
+class _ModernBannerCardState extends State<_ModernBannerCard> {
+  bool _hovering = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final b = widget.banner;
+    final Color? bgColor = b['background_color'] != null && b['background_color'].isNotEmpty
+        ? Color(int.parse('0xff${b['background_color'].replaceAll('#', '')}'))
+        : null;
+    final Color? textColor = b['text_color'] != null && b['text_color'].isNotEmpty
+        ? Color(int.parse('0xff${b['text_color'].replaceAll('#', '')}'))
+        : null;
+    return MouseRegion(
+      onEnter: (_) => setState(() => _hovering = true),
+      onExit: (_) => setState(() => _hovering = false),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        curve: Curves.easeInOut,
+        margin: EdgeInsets.symmetric(horizontal: widget.isMobile ? 8 : 16, vertical: widget.isMobile ? 4 : 8),
+        decoration: BoxDecoration(
+          color: (bgColor ?? Colors.white).withOpacity(_hovering ? 0.98 : 0.93),
+          borderRadius: BorderRadius.circular(18),
+          boxShadow: [
+            BoxShadow(
+              color: _hovering ? Colors.blue.withOpacity(0.13) : Colors.grey.withOpacity(0.08),
+              blurRadius: _hovering ? 14 : 8,
+              offset: const Offset(0, 4),
+            ),
+          ],
+          border: Border.all(
+            color: _hovering ? Colors.blue.withOpacity(0.18) : Colors.transparent,
+            width: 1.1,
           ),
-        ],
+        ),
+        child: ListTile(
+          leading: b['image_url'] != null && b['image_url'].isNotEmpty
+              ? Image.network(b['image_url'], width: 56, height: 56, fit: BoxFit.cover)
+              : const Icon(Icons.image, size: 56),
+          title: Text(
+            b['title'] ?? '',
+            style: TextStyle(
+              color: textColor,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          subtitle: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (b['subtitle'] != null && b['subtitle'].isNotEmpty)
+                Text(b['subtitle'], style: TextStyle(color: textColor)),
+              if (b['discount'] != null && b['discount'].isNotEmpty)
+                Text('Discount: ${b['discount']}', style: TextStyle(color: textColor)),
+            ],
+          ),
+          trailing: IconButton(
+            icon: const Icon(Icons.delete, color: Colors.red),
+            tooltip: 'Delete Banner',
+            onPressed: widget.onDelete,
+          ),
+        ),
       ),
     );
   }

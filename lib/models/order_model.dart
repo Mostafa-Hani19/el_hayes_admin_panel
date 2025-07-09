@@ -1,3 +1,5 @@
+import 'package:supabase_flutter/supabase_flutter.dart';
+
 class Order {
   final String id;
   final String userId;
@@ -33,6 +35,15 @@ class Order {
       items: items,
       isSeen: json['is_seen'] ?? false,
     );
+  }
+
+  static Stream<List<Order>> ordersStream() async* {
+    final supabase = Supabase.instance.client;
+    await for (final data in supabase.from('orders').stream(primaryKey: ['id'])) {
+      yield (data as List)
+          .map((json) => Order.fromJson(json, []))
+          .toList();
+    }
   }
 }
 

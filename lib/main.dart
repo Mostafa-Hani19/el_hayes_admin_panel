@@ -1,78 +1,80 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'config/supabase_config.dart';
-import 'config/theme_config.dart';
+import 'services/auth_service.dart';
 import 'providers/auth_provider.dart';
 import 'screens/dashboard_screen.dart';
-import 'screens/login_screen.dart';
 import 'screens/users_screen.dart';
-import 'screens/products_screen.dart';
-import 'screens/categories_screen.dart';
 import 'screens/orders_screen.dart';
-import 'screens/settings_screen.dart';
-import 'screens/splash_screen.dart';
-import 'screens/notification_screen.dart';
+import 'screens/categories_screen.dart';
+import 'screens/products_screen.dart';
 import 'screens/banners_screen.dart';
 import 'screens/tickers_screen.dart';
-import 'screens/order_details_screen.dart';
+import 'screens/notification_screen.dart';
+import 'screens/settings_screen.dart';
 import 'screens/support_messages_screen.dart';
-import 'services/auth_service.dart';
-import 'utils/constants.dart';
+import 'screens/login_screen.dart';
+import 'models/order_model.dart';
+import 'screens/order_details_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
-  // Initialize Supabase
   await Supabase.initialize(
     url: SupabaseConfig.supabaseUrl,
     anonKey: SupabaseConfig.supabaseAnonKey,
   );
-  
-  runApp(const MyApp());
+  final supabaseClient = Supabase.instance.client;
+  runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => AuthProvider(AuthService(supabaseClient))),
+        StreamProvider<List<Order>>(
+          create: (_) => Order.ordersStream(),
+          initialData: const [],
+        ),
+      ],
+      child: const MyApp(),
+    ),
+  );
 }
+
+final GoRouter _router = GoRouter(
+  routes: [
+    GoRoute(path: '/', builder: (context, state) => const DashboardScreen()),
+    GoRoute(path: '/dashboard', builder: (context, state) => const DashboardScreen()),
+    GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
+    GoRoute(path: '/users', builder: (context, state) => const UsersScreen()),
+    GoRoute(path: '/orders', builder: (context, state) => const OrdersScreen()),
+    GoRoute(path: '/categories', builder: (context, state) => const CategoriesScreen()),
+    GoRoute(path: '/products', builder: (context, state) => const ProductsScreen()),
+    GoRoute(path: '/banners', builder: (context, state) => const BannersScreen()),
+    GoRoute(path: '/tickers', builder: (context, state) => const TickersScreen()),
+    GoRoute(path: '/notifications', builder: (context, state) => const NotificationScreen()),
+    GoRoute(path: '/settings', builder: (context, state) => const SettingsScreen()),
+    GoRoute(path: '/support_messages', builder: (context, state) => const SupportMessagesScreen()),
+    GoRoute(
+      path: '/order_details/:orderId',
+      builder: (context, state) => OrderDetailsScreen(orderId: state.pathParameters['orderId']!),
+    ),
+  ],
+  initialLocation: '/dashboard',
+);
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final supabase = Supabase.instance.client;
-    final authService = AuthService(supabase);
-    
-    return MultiProvider(
-      providers: [
-        ChangeNotifierProvider(
-          create: (_) => AuthProvider(authService),
-        ),
-        ordersStreamProvider,
-      ],
-      child: MaterialApp(
-        title: Constants.appName,
-        theme: ThemeConfig.lightTheme(),
-        darkTheme: ThemeConfig.darkTheme(),
-        themeMode: ThemeMode.system,
-        debugShowCheckedModeBanner: false,
-        initialRoute: '/',
-        routes: {
-          '/': (context) => const SplashScreen(),
-          Constants.loginRoute: (context) => const LoginScreen(),
-          Constants.dashboardRoute: (context) => const DashboardScreen(),
-          Constants.usersRoute: (context) => const UsersScreen(),
-          Constants.productsRoute: (context) => const ProductsScreen(),
-          Constants.categoriesRoute: (context) => const CategoriesScreen(),
-          Constants.ordersRoute: (context) => const OrdersScreen(),
-          Constants.settingsRoute: (context) => const SettingsScreen(),
-          '/notifications': (context) => const NotificationScreen(),
-          '/banners': (context) => const BannersScreen(),
-          '/tickers': (context) => const TickersScreen(),
-          OrderDetailsScreen.routeName: (context) {
-            final args = ModalRoute.of(context)!.settings.arguments as String;
-            return OrderDetailsScreen(orderId: args);
-          },
-          '/support_messages': (context) => const SupportMessagesScreen(),
-        },
+    return MaterialApp.router(
+      title: 'El Hayes Admin',
+      theme: ThemeData(
+        primarySwatch: Colors.blue,
+        fontFamily: 'Cairo',
       ),
+      routerConfig: _router,
+      debugShowCheckedModeBanner: false,
     );
   }
 }

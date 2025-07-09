@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 class Constants {
   // App info
-  static const String appName = 'El Hayes Admin Panel';
+  static const String appName = 'El Hayes ';
   static const String appVersion = '1.0.0';
   
   // Routes

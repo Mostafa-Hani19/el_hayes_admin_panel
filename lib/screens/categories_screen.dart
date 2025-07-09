@@ -1,4 +1,4 @@
-// ignore_for_file: use_build_context_synchronously
+// ignore_for_file: use_build_context_synchronously, unused_local_variable, deprecated_member_use
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -74,11 +74,20 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
   @override
   Widget build(BuildContext context) {
     final isMobile = Constants.isMobile(context);
+    final isTablet = Constants.isTablet(context);
+    final isDesktop = Constants.isDesktop(context);
+    final Color bgGradientStart = Colors.grey[100]!;
+    final Color bgGradientEnd = Colors.blueGrey[50]!;
     return Scaffold(
+      extendBodyBehindAppBar: false,
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
         title: const Text('Categories'),
+        centerTitle: true,
         automaticallyImplyLeading: false,
         leading: isMobile ? const SidebarMenu() : null,
+        backgroundColor: Colors.white.withOpacity(0.85),
+        elevation: 0.5,
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
@@ -92,53 +101,54 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
         tooltip: 'Add Category',
         child: const Icon(Icons.add),
       ),
-      body: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (!isMobile) const SidebarMenu(),
-          Expanded(
-            child: _isLoading
-                ? const Center(child: CircularProgressIndicator())
-                : _error != null
-                    ? Center(child: Text(_error!))
-                    : _categories.isEmpty
-                        ? const Center(child: Text('No categories found'))
-                        : ListView.separated(
-                            padding: const EdgeInsets.all(16),
-                            itemCount: _categories.length,
-                            separatorBuilder: (context, i) => const Divider(),
-                            itemBuilder: (context, i) {
-                              final c = _categories[i];
-                              return ListTile(
-                                leading: c.imageUrl != null && c.imageUrl!.isNotEmpty
-                                    ? ClipRRect(
-                                        borderRadius: BorderRadius.circular(8),
-                                        child: Image.network(c.imageUrl!, width: 40, height: 40, fit: BoxFit.cover),
-                                      )
-                                    : const Icon(Icons.category),
-                                title: Text(c.name),
-                                subtitle: Text('Products: ${_productCounts[c.id] ?? 0}'),
-                                onTap: () => _showProductsInCategory(c),
-                                trailing: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    IconButton(
-                                      icon: const Icon(Icons.edit),
-                                      tooltip: 'Edit',
-                                      onPressed: () => _showEditCategoryDialog(c),
-                                    ),
-                                    IconButton(
-                                      icon: const Icon(Icons.delete),
-                                      tooltip: 'Delete',
-                                      onPressed: () => _showDeleteCategoryDialog(c),
-                                    ),
-                                  ],
-                                ),
-                              );
-                            },
-                          ),
+      body: Container(
+        width: double.infinity,
+        height: double.infinity,
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [bgGradientStart, bgGradientEnd],
           ),
-        ],
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (!isMobile) const SidebarMenu(),
+            Expanded(
+              child: _isLoading
+                  ? const Center(child: CircularProgressIndicator())
+                  : _error != null
+                      ? Center(child: Text(_error!))
+                      : _categories.isEmpty
+                          ? const Center(child: Text('No categories found'))
+                          : Column(
+                              children: [
+                                const SizedBox(height: 16),
+                                Divider(height: isMobile ? 18 : 32, thickness: 1.2, color: Colors.blueGrey[100]),
+                                Expanded(
+                                  child: ListView.separated(
+                                    padding: const EdgeInsets.all(16),
+                                    itemCount: _categories.length,
+                                    separatorBuilder: (context, i) => const Divider(),
+                                    itemBuilder: (context, i) {
+                                      final c = _categories[i];
+                                      return _ModernCategoryCard(
+                                        category: c,
+                                        productCount: _productCounts[c.id] ?? 0,
+                                        isMobile: isMobile,
+                                        onShowProducts: () => _showProductsInCategory(c),
+                                        onEdit: () => _showEditCategoryDialog(c),
+                                        onDelete: () => _showDeleteCategoryDialog(c),
+                                      );
+                                    },
+                                  ),
+                                ),
+                              ],
+                            ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -148,6 +158,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
     final nameController = TextEditingController();
     Uint8List? imageBytes;
     bool isSubmitting = false;
+    // ignore: duplicate_ignore
     // ignore: unused_local_variable
     String? uploadedImageUrl;
 
@@ -275,7 +286,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
     final nameController = TextEditingController(text: category.name);
     Uint8List? imageBytes;
     bool isSubmitting = false;
-    // ignore: unused_local_variable
+    // ignore: 
     String? uploadedImageUrl;
 
     Future<void> pickImage(StateSetter setState) async {
@@ -534,6 +545,78 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
           },
         );
       },
+    );
+  }
+}
+
+class _ModernCategoryCard extends StatefulWidget {
+  final Category category;
+  final int productCount;
+  final bool isMobile;
+  final VoidCallback onShowProducts;
+  final VoidCallback onEdit;
+  final VoidCallback onDelete;
+  const _ModernCategoryCard({required this.category, required this.productCount, required this.isMobile, required this.onShowProducts, required this.onEdit, required this.onDelete});
+
+  @override
+  State<_ModernCategoryCard> createState() => _ModernCategoryCardState();
+}
+
+class _ModernCategoryCardState extends State<_ModernCategoryCard> {
+  bool _hovering = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = widget.category;
+    return MouseRegion(
+      onEnter: (_) => setState(() => _hovering = true),
+      onExit: (_) => setState(() => _hovering = false),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        curve: Curves.easeInOut,
+        margin: EdgeInsets.symmetric(horizontal: widget.isMobile ? 8 : 16, vertical: widget.isMobile ? 4 : 8),
+        decoration: BoxDecoration(
+          color: Colors.white.withOpacity(_hovering ? 0.98 : 0.93),
+          borderRadius: BorderRadius.circular(18),
+          boxShadow: [
+            BoxShadow(
+              color: _hovering ? Colors.blue.withOpacity(0.13) : Colors.grey.withOpacity(0.08),
+              blurRadius: _hovering ? 14 : 8,
+              offset: const Offset(0, 4),
+            ),
+          ],
+          border: Border.all(
+            color: _hovering ? Colors.blue.withOpacity(0.18) : Colors.transparent,
+            width: 1.1,
+          ),
+        ),
+        child: ListTile(
+          leading: c.imageUrl != null && c.imageUrl!.isNotEmpty
+              ? ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: Image.network(c.imageUrl!, width: 40, height: 40, fit: BoxFit.cover),
+                )
+              : const Icon(Icons.category),
+          title: Text(c.name, style: const TextStyle(fontWeight: FontWeight.bold)),
+          subtitle: Text('Products: ${widget.productCount}'),
+          onTap: widget.onShowProducts,
+          trailing: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              IconButton(
+                icon: const Icon(Icons.edit),
+                tooltip: 'Edit',
+                onPressed: widget.onEdit,
+              ),
+              IconButton(
+                icon: const Icon(Icons.delete),
+                tooltip: 'Delete',
+                onPressed: widget.onDelete,
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 } 

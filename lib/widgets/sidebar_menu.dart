@@ -1,9 +1,10 @@
-// ignore_for_file: use_build_context_synchronously
+// ignore_for_file: use_build_context_synchronously, deprecated_member_use
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
 import '../utils/constants.dart';
+import 'package:go_router/go_router.dart';
 
 class SidebarMenu extends StatelessWidget {
   const SidebarMenu({super.key});
@@ -14,157 +15,216 @@ class SidebarMenu extends StatelessWidget {
     final currentRoute = ModalRoute.of(context)?.settings.name;
     final isMobile = Constants.isMobile(context);
     final isTablet = Constants.isTablet(context);
-    
-    // Adjust width based on screen size
+    final isDesktop = !isMobile && !isTablet;
+
+    // Responsive width
     double drawerWidth = MediaQuery.of(context).size.width;
     if (isMobile) {
-      drawerWidth = drawerWidth * 0.75; // 75% of screen width on mobile
+      drawerWidth = drawerWidth;
     } else if (isTablet) {
-      drawerWidth = 250; // Fixed width on tablet
+      drawerWidth = 250;
     } else {
-      drawerWidth = 280; // Slightly wider on desktop
+      drawerWidth = 280;
     }
-    
-    return SizedBox(
-      width: isMobile ? null : drawerWidth,
+
+    return Container(
+      decoration: BoxDecoration(
+        color: isDesktop ? Colors.white : null,
+        borderRadius: isDesktop ? const BorderRadius.only(
+          topRight: Radius.circular(24),
+          bottomRight: Radius.circular(24),
+        ) : null,
+        boxShadow: isDesktop
+            ? [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.07),
+                  blurRadius: 16,
+                  offset: const Offset(2, 0),
+                ),
+              ]
+            : null,
+      ),
+      width: drawerWidth,
       child: Drawer(
-        width: isMobile ? drawerWidth : null,
-        child: ListView(
-          padding: EdgeInsets.zero,
+        width: drawerWidth,
+        backgroundColor: isDesktop ? Colors.white : Theme.of(context).scaffoldBackgroundColor,
+        shape: isDesktop
+            ? const RoundedRectangleBorder(
+                borderRadius: BorderRadius.only(
+                  topRight: Radius.circular(24),
+                  bottomRight: Radius.circular(24),
+                ),
+              )
+            : null,
+        child: Column(
           children: [
-            DrawerHeader(
+            Container(
+              padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 20),
               decoration: BoxDecoration(
                 color: Theme.of(context).colorScheme.primary,
+                borderRadius: isDesktop
+                    ? const BorderRadius.only(
+                        topRight: Radius.circular(24),
+                      )
+                    : null,
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              child: Row(
                 children: [
-                  Text(
-                    Constants.appName,
-                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                        ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+                  CircleAvatar(
+                    radius: 28,
+                    backgroundColor: Colors.white,
+                    child: Text(
+                      (authProvider.currentUser?.fullName ?? 'A').substring(0, 1).toUpperCase(),
+                      style: TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
+                    ),
                   ),
-                  const SizedBox(height: Constants.smallPadding),
-                  Text(
-                    authProvider.currentUser?.fullName ?? 'Admin',
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          color: Colors.white,
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          Constants.appName,
+                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                              ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  Text(
-                    authProvider.currentUser?.email ?? '',
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: Colors.white.withAlpha(204),
+                        const SizedBox(height: 4),
+                        Text(
+                          authProvider.currentUser?.fullName ?? 'Admin',
+                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w500,
+                              ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+                        Text(
+                          authProvider.currentUser?.email ?? '',
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                color: Colors.white.withAlpha(204),
+                              ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),
             ),
-            _buildMenuItem(
-              context,
-              icon: Icons.dashboard,
-              title: 'Dashboard',
-              route: Constants.dashboardRoute,
-              isActive: currentRoute == Constants.dashboardRoute,
-            ),
-            _buildMenuItem(
-              context,
-              icon: Icons.people,
-              title: 'Users',
-              route: Constants.usersRoute,
-              isActive: currentRoute == Constants.usersRoute,
-            ),
-            _buildMenuItem(
-              context,
-              icon: Icons.shopping_cart,
-              title: 'Orders',
-              route: Constants.ordersRoute,
-              isActive: currentRoute == Constants.ordersRoute,
-            ),
-            _buildMenuItem(
-              context,
-              icon: Icons.category,
-              title: 'Categories',
-              route: Constants.categoriesRoute,
-              isActive: currentRoute == Constants.categoriesRoute,
-            ),
-            _buildMenuItem(
-              context,
-              icon: Icons.inventory,
-              title: 'Products',
-              route: Constants.productsRoute,
-              isActive: currentRoute == Constants.productsRoute,
-            ),
-            _buildMenuItem(
-              context,
-              icon: Icons.photo_library,
-              title: 'Banners',
-              route: '/banners',
-              isActive: currentRoute == '/banners',
-            ),
-            _buildMenuItem(
-              context,
-              icon: Icons.view_carousel,
-              title: 'Ticker Banners',
-              route: '/tickers',
-              isActive: currentRoute == '/tickers',
-            ),
-            _buildMenuItem(
-              context,
-              icon: Icons.notifications,
-              title: 'Notifications',
-              route: '/notifications',
-              isActive: currentRoute == '/notifications',
-            ),
-            _buildMenuItem(
-              context,
-              icon: Icons.settings,
-              title: 'Settings',
-              route: '/settings',
-              isActive: currentRoute == '/settings',
-            ),
-            ListTile(
-              leading: const Icon(Icons.support_agent),
-              title: const Text('Support Messages'),
-              onTap: () {
-                Navigator.pushReplacementNamed(context, '/support_messages');
-              },
-            ),
-            const Divider(),
-            ListTile(
-              leading: const Icon(Icons.logout),
-              title: const Text('Logout'),
-              onTap: () async {
-                final confirmed = await showDialog<bool>(
-                  context: context,
-                  builder: (context) => AlertDialog(
-                    title: const Text('Confirm Logout'),
-                    content: const Text('Are you sure you want to log out?'),
-                    actions: [
-                      TextButton(
-                        onPressed: () => Navigator.pop(context, false),
-                        child: const Text('Cancel'),
-                      ),
-                      ElevatedButton(
-                        onPressed: () => Navigator.pop(context, true),
-                        child: const Text('Logout'),
-                      ),
-                    ],
+            const SizedBox(height: 12),
+            Expanded(
+              child: ListView(
+                padding: EdgeInsets.zero,
+                children: [
+                  _buildMenuItem(
+                    context,
+                    icon: Icons.dashboard,
+                    title: 'Dashboard',
+                    route: Constants.dashboardRoute,
+                    isActive: currentRoute == Constants.dashboardRoute,
                   ),
-                );
-                if (confirmed == true) {
-                  authProvider.signOut();
-                  Navigator.pushReplacementNamed(context, Constants.loginRoute);
-                }
-              },
+                  _buildMenuItem(
+                    context,
+                    icon: Icons.people,
+                    title: 'Users',
+                    route: Constants.usersRoute,
+                    isActive: currentRoute == Constants.usersRoute,
+                  ),
+                  _buildMenuItem(
+                    context,
+                    icon: Icons.shopping_cart,
+                    title: 'Orders',
+                    route: Constants.ordersRoute,
+                    isActive: currentRoute == Constants.ordersRoute,
+                  ),
+                  _buildMenuItem(
+                    context,
+                    icon: Icons.category,
+                    title: 'Categories',
+                    route: Constants.categoriesRoute,
+                    isActive: currentRoute == Constants.categoriesRoute,
+                  ),
+                  _buildMenuItem(
+                    context,
+                    icon: Icons.inventory,
+                    title: 'Products',
+                    route: Constants.productsRoute,
+                    isActive: currentRoute == Constants.productsRoute,
+                  ),
+                  _buildMenuItem(
+                    context,
+                    icon: Icons.photo_library,
+                    title: 'Banners',
+                    route: '/banners',
+                    isActive: currentRoute == '/banners',
+                  ),
+                  _buildMenuItem(
+                    context,
+                    icon: Icons.view_carousel,
+                    title: 'Ticker Banners',
+                    route: '/tickers',
+                    isActive: currentRoute == '/tickers',
+                  ),
+                  _buildMenuItem(
+                    context,
+                    icon: Icons.notifications,
+                    title: 'Notifications',
+                    route: '/notifications',
+                    isActive: currentRoute == '/notifications',
+                  ),
+                  _buildMenuItem(
+                    context,
+                    icon: Icons.settings,
+                    title: 'Settings',
+                    route: '/settings',
+                    isActive: currentRoute == '/settings',
+                  ),
+                  ListTile(
+                    leading: const Icon(Icons.support_agent),
+                    title: const Text('Support Messages'),
+                    onTap: () {
+                      context.go('/support_messages');
+                    },
+                  ),
+                  const Divider(),
+                  ListTile(
+                    leading: const Icon(Icons.logout),
+                    title: const Text('Logout'),
+                    onTap: () async {
+                      final confirmed = await showDialog<bool>(
+                        context: context,
+                        builder: (context) => AlertDialog(
+                          title: const Text('Confirm Logout'),
+                          content: const Text('Are you sure you want to log out?'),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.pop(context, false),
+                              child: const Text('Cancel'),
+                            ),
+                            ElevatedButton(
+                              onPressed: () => Navigator.pop(context, true),
+                              child: const Text('Logout'),
+                            ),
+                          ],
+                        ),
+                      );
+                      if (confirmed == true) {
+                        await authProvider.signOut();
+                        context.go('/login');
+                      }
+                    },
+                  ),
+                ],
+              ),
             ),
           ],
         ),
@@ -179,27 +239,42 @@ class SidebarMenu extends StatelessWidget {
     required String route,
     required bool isActive,
   }) {
-    return ListTile(
-      leading: Icon(
-        icon,
-        color: isActive ? Theme.of(context).colorScheme.primary : null,
-      ),
-      title: Text(
-        title,
-        style: TextStyle(
-          color: isActive ? Theme.of(context).colorScheme.primary : null,
-          fontWeight: isActive ? FontWeight.bold : null,
+    final isDesktop = !Constants.isMobile(context) && !Constants.isTablet(context);
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 150),
+        decoration: BoxDecoration(
+          color: isActive ? Theme.of(context).colorScheme.primary.withOpacity(0.08) : null,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+        child: ListTile(
+          leading: Icon(
+            icon,
+            color: isActive ? Theme.of(context).colorScheme.primary : Colors.grey[700],
+          ),
+          title: Text(
+            title,
+            style: TextStyle(
+              color: isActive ? Theme.of(context).colorScheme.primary : Colors.grey[900],
+              fontWeight: isActive ? FontWeight.bold : FontWeight.w500,
+              fontSize: isDesktop ? 16 : 15,
+              fontFamily: 'Cairo',
+            ),
+          ),
+          onTap: () {
+            if (route == 'send_notification') {
+              _showSendNotificationDialog(context);
+            } else if (route == 'view_notifications') {
+              _showSentNotificationsDialog(context);
+            } else {
+              context.go(route);
+            }
+          },
+          hoverColor: Theme.of(context).colorScheme.primary.withOpacity(0.12),
         ),
       ),
-      onTap: () {
-        if (route == 'send_notification') {
-          _showSendNotificationDialog(context);
-        } else if (route == 'view_notifications') {
-          _showSentNotificationsDialog(context);
-        } else {
-          Navigator.pushReplacementNamed(context, route);
-        }
-      },
     );
   }
 

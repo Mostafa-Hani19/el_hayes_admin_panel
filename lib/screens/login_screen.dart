@@ -1,4 +1,4 @@
-// ignore_for_file: use_build_context_synchronously
+// ignore_for_file: use_build_context_synchronously, deprecated_member_use
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -6,6 +6,7 @@ import '../providers/auth_provider.dart';
 import '../utils/validators.dart';
 import '../utils/constants.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:go_router/go_router.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -65,6 +66,11 @@ Future<void> _handleSignIn() async {
       debugPrint('Sign in success: $success');
       
       if (!success || !mounted) {
+        // If error message is about invalid credentials, show a friendly message
+        final err = authProvider.errorMessage ?? '';
+        if (err.contains('AuthApiException') && err.contains('invalid_credentials')) {
+          authProvider.setErrorMessage('Invalid email or password. Please try again.');
+        }
         debugPrint('Login failed or widget unmounted');
         return;
       }
@@ -93,7 +99,7 @@ Future<void> _handleSignIn() async {
       
       if (!isAdmin) {
         debugPrint('User is not an admin based on direct DB check');
-        authProvider.setErrorMessage('Access denied. Only admins can login.');
+        authProvider.setErrorMessage('Access denied. Only admin users can sign in.');
         await authProvider.signOut(); // Sign out non-admin users
         return;
       }
@@ -108,10 +114,15 @@ Future<void> _handleSignIn() async {
       
       // Navigate to dashboard if all checks pass
       debugPrint('Navigating to dashboard');
-      Navigator.pushReplacementNamed(context, Constants.dashboardRoute);
+      context.go(Constants.dashboardRoute);
     } catch (e) {
-      debugPrint('Login error: ${e.toString()}');
-      authProvider.setErrorMessage('Login failed: ${e.toString()}');
+      debugPrint('Login error: \\${e.toString()}');
+      final errStr = e.toString();
+      if (errStr.contains('AuthApiException') && errStr.contains('invalid_credentials')) {
+        authProvider.setErrorMessage('Invalid email or password. Please try again.');
+      } else {
+        authProvider.setErrorMessage('Login failed. Please try again.');
+      }
     }
   }
 }
@@ -165,6 +176,30 @@ Future<void> _handleSignIn() async {
                             fontWeight: FontWeight.bold,
                           ),
                     ),
+                    if (authProvider.errorMessage != null && authProvider.errorMessage!.isNotEmpty)
+                      Container(
+                        width: double.infinity,
+                        margin: const EdgeInsets.only(top: 16, bottom: 8),
+                        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                        decoration: BoxDecoration(
+                          color: Colors.red.withOpacity(0.08),
+                          border: Border.all(color: Colors.red.withOpacity(0.18)),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Icon(Icons.error_outline, color: Colors.red, size: 22),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Text(
+                                authProvider.errorMessage!,
+                                style: const TextStyle(color: Colors.red, fontWeight: FontWeight.w600),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                     SizedBox(height: isSmallScreen ? Constants.defaultPadding : Constants.largePadding),
                     Form(
                       key: _formKey,

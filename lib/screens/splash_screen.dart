@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../utils/constants.dart';
+import 'package:go_router/go_router.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -21,9 +22,9 @@ class _SplashScreenState extends State<SplashScreen> {
     final user = Supabase.instance.client.auth.currentUser;
     if (!mounted) return;
     if (user != null) {
-      Navigator.pushReplacementNamed(context, Constants.dashboardRoute);
+      context.go(Constants.dashboardRoute);
     } else {
-      Navigator.pushReplacementNamed(context, Constants.loginRoute);
+      context.go(Constants.loginRoute);
     }
   }
 

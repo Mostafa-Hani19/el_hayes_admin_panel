@@ -1,5 +1,5 @@
 // استيراد الحزم المطلوبة
-// ignore_for_file: use_build_context_synchronously
+// ignore_for_file: use_build_context_synchronously, unused_local_variable, deprecated_member_use
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -9,6 +9,114 @@ import '../widgets/sidebar_menu.dart';
 import 'dart:typed_data';
 import 'package:image_picker/image_picker.dart';
 import '../utils/constants.dart';
+
+// Place _ModernProductCard at the very top-level, before ProductsScreen
+class _ModernProductCard extends StatefulWidget {
+  final Product product;
+  final String Function(String) getCategoryName;
+  final bool isMobile;
+  final VoidCallback onEdit;
+  final VoidCallback onDelete;
+  const _ModernProductCard({required this.product, required this.getCategoryName, required this.isMobile, required this.onEdit, required this.onDelete});
+
+  @override
+  State<_ModernProductCard> createState() => _ModernProductCardState();
+}
+
+class _ModernProductCardState extends State<_ModernProductCard> {
+  bool _hovering = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final p = widget.product;
+    return MouseRegion(
+      onEnter: (_) => setState(() => _hovering = true),
+      onExit: (_) => setState(() => _hovering = false),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        curve: Curves.easeInOut,
+        margin: EdgeInsets.symmetric(horizontal: widget.isMobile ? 8 : 16, vertical: widget.isMobile ? 4 : 8),
+        decoration: BoxDecoration(
+          color: Colors.white.withOpacity(_hovering ? 0.98 : 0.93),
+          borderRadius: BorderRadius.circular(18),
+          boxShadow: [
+            BoxShadow(
+              color: _hovering ? Colors.blue.withOpacity(0.13) : Colors.grey.withOpacity(0.08),
+              blurRadius: _hovering ? 14 : 8,
+              offset: const Offset(0, 4),
+            ),
+          ],
+          border: Border.all(
+            color: _hovering ? Colors.blue.withOpacity(0.18) : Colors.transparent,
+            width: 1.1,
+          ),
+        ),
+        child: ListTile(
+          leading: p.imageUrl.isNotEmpty
+              ? Image.network(p.imageUrl, width: 56, height: 56, fit: BoxFit.cover)
+              : const Icon(Icons.image, size: 56),
+          title: Text(p.name, style: const TextStyle(fontWeight: FontWeight.bold)),
+          subtitle: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(p.code, style: const TextStyle(fontWeight: FontWeight.bold)),
+              Text(p.description),
+              const SizedBox(height: 4),
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: p.isAvailable ? Colors.green[100] : Colors.red[100],
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      p.isAvailable ? 'Available' : 'Not Available',
+                      style: TextStyle(
+                        color: p.isAvailable ? Colors.green[800] : Colors.red[800],
+                        fontWeight: FontWeight.bold,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Flexible(
+                    child: Text(
+                      'Category: ${widget.getCategoryName(p.categoryId)}',
+                      style: const TextStyle(fontSize: 12),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          trailing: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [Text('EGP ${p.price.toStringAsFixed(2)}')],
+              ),
+              const SizedBox(width: 8),
+              IconButton(
+                icon: const Icon(Icons.edit),
+                tooltip: 'Edit',
+                onPressed: widget.onEdit,
+              ),
+              IconButton(
+                icon: const Icon(Icons.delete),
+                tooltip: 'Delete',
+                onPressed: widget.onDelete,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
 
 class ProductsScreen extends StatefulWidget {
   const ProductsScreen({super.key});
@@ -121,7 +229,6 @@ class _ProductsScreenState extends State<ProductsScreen> {
   Widget build(BuildContext context) {
     final isMobile = Constants.isMobile(context);
     final isTablet = Constants.isTablet(context);
-    // ignore: unused_local_variable
     final isDesktop = Constants.isDesktop(context);
     double maxContentWidth = isMobile
         ? double.infinity
@@ -138,11 +245,18 @@ class _ProductsScreenState extends State<ProductsScreen> {
         : isTablet
         ? 8.0
         : 24.0;
+    final Color bgGradientStart = Colors.grey[100]!;
+    final Color bgGradientEnd = Colors.blueGrey[50]!;
     return Scaffold(
+      extendBodyBehindAppBar: false,
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
         title: const Text('Products'),
+        centerTitle: true,
         automaticallyImplyLeading: false,
         leading: isMobile ? const SidebarMenu() : null,
+        backgroundColor: Colors.white.withOpacity(0.85),
+        elevation: 0.5,
         actions: [
           IconButton(icon: const Icon(Icons.refresh), onPressed: _loadProducts),
         ],
@@ -153,74 +267,85 @@ class _ProductsScreenState extends State<ProductsScreen> {
         tooltip: 'Add Product',
         child: const Icon(Icons.add),
       ),
-      body: LayoutBuilder(
-        builder: (context, constraints) {
-          return Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              if (!isMobile) const SidebarMenu(),
-              Expanded(
-                child: Center(
-                  child: ConstrainedBox(
-                    constraints: BoxConstraints(maxWidth: maxContentWidth),
-                    child: Padding(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: horizontalPadding,
-                        vertical: verticalPadding,
+      body: Container(
+        width: double.infinity,
+        height: double.infinity,
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [bgGradientStart, bgGradientEnd],
+          ),
+        ),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            return Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (!isMobile) const SidebarMenu(),
+                Expanded(
+                  child: Center(
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(maxWidth: maxContentWidth),
+                      child: Padding(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: horizontalPadding,
+                          vertical: verticalPadding,
+                        ),
+                        child: _isLoading
+                            ? const Center(child: CircularProgressIndicator())
+                            : _error != null
+                                ? Center(child: Text(_error!))
+                                : _products.isEmpty
+                                    ? const Center(child: Text('No products found'))
+                                    : Column(
+                                        children: [
+                                          const SizedBox(height: 32),
+                                          // Modern search/filter bar
+                                          Card(
+                                            elevation: 3,
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius: BorderRadius.circular(18),
+                                            ),
+                                            margin: EdgeInsets.symmetric(horizontal: isMobile ? 0 : 8),
+                                            child: Padding(
+                                              padding: EdgeInsets.symmetric(
+                                                horizontal: isMobile ? 8 : 24,
+                                                vertical: isMobile ? 8 : 16,
+                                              ),
+                                              child: isMobile
+                                                  ? Column(
+                                                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                                                      children: _buildModernFilterRow(isMobile, isTablet),
+                                                    )
+                                                  : Row(
+                                                      children: _buildModernFilterRow(isMobile, isTablet),
+                                                    ),
+                                            ),
+                                          ),
+                                          Divider(height: isMobile ? 18 : 32, thickness: 1.2, color: Colors.blueGrey[100]),
+                                          Expanded(
+                                            child: _buildModernProductLayout(
+                                              isMobile,
+                                              isTablet,
+                                              _filteredProducts,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
                       ),
-                      child: _isLoading
-                          ? const Center(child: CircularProgressIndicator())
-                          : _error != null
-                          ? Center(child: Text(_error!))
-                          : _products.isEmpty
-                          ? const Center(child: Text('No products found'))
-                          : Column(
-                              children: [
-                                Padding(
-                                  padding: EdgeInsets.all(
-                                    isMobile
-                                        ? 8.0
-                                        : isTablet
-                                        ? 12.0
-                                        : 20.0,
-                                  ),
-                                  child: isMobile
-                                      ? Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.stretch,
-                                          children: _buildFilterRow(
-                                            isMobile,
-                                            isTablet,
-                                          ),
-                                        )
-                                      : Row(
-                                          children: _buildFilterRow(
-                                            isMobile,
-                                            isTablet,
-                                          ),
-                                        ),
-                                ),
-                                Expanded(
-                                  child: _buildResponsiveProductLayout(
-                                    isMobile,
-                                    isTablet,
-                                    _filteredProducts,
-                                  ),
-                                ),
-                              ],
-                            ),
                     ),
                   ),
                 ),
-              ),
-            ],
-          );
-        },
+              ],
+            );
+          },
+        ),
       ),
     );
   }
 
-  List<Widget> _buildFilterRow(bool isMobile, bool isTablet) {
+  List<Widget> _buildModernFilterRow(bool isMobile, bool isTablet) {
     return [
       Expanded(
         child: TextField(
@@ -229,7 +354,9 @@ class _ProductsScreenState extends State<ProductsScreen> {
             labelText: 'Search Products',
             hintText: 'Enter name or description',
             prefixIcon: const Icon(Icons.search),
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+            filled: true,
+            fillColor: Colors.grey[50],
             suffixIcon: IconButton(
               icon: const Icon(Icons.clear),
               onPressed: () {
@@ -244,42 +371,56 @@ class _ProductsScreenState extends State<ProductsScreen> {
         ),
       ),
       SizedBox(width: isMobile ? 8 : 16),
-      DropdownButton<String>(
-        value: _categoryFilter,
-        items: [
-          const DropdownMenuItem(value: 'all', child: Text('All Categories')),
-          ..._categories.map(
-            (cat) =>
-                DropdownMenuItem(value: cat['id'], child: Text(cat['name'])),
-          ),
-        ],
-        onChanged: (val) {
-          setState(() {
-            _categoryFilter = val ?? 'all';
-          });
-        },
+      Container(
+        decoration: BoxDecoration(
+          color: Colors.grey[50],
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.grey[300]!),
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 8),
+        child: DropdownButton<String>(
+          value: _categoryFilter,
+          underline: const SizedBox(),
+          items: [
+            const DropdownMenuItem(value: 'all', child: Text('All Categories')),
+            ..._categories.map(
+              (cat) => DropdownMenuItem(value: cat['id'], child: Text(cat['name'])),
+            ),
+          ],
+          onChanged: (val) {
+            setState(() {
+              _categoryFilter = val ?? 'all';
+            });
+          },
+        ),
       ),
       SizedBox(width: isMobile ? 8 : 16),
-      DropdownButton<String>(
-        value: _availabilityFilter,
-        items: const [
-          DropdownMenuItem(value: 'all', child: Text('All Statuses')),
-          DropdownMenuItem(value: 'available', child: Text('Available')),
-          DropdownMenuItem(
-            value: 'not_available',
-            child: Text('Not Available'),
-          ),
-        ],
-        onChanged: (val) {
-          setState(() {
-            _availabilityFilter = val ?? 'all';
-          });
-        },
+      Container(
+        decoration: BoxDecoration(
+          color: Colors.grey[50],
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.grey[300]!),
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 8),
+        child: DropdownButton<String>(
+          value: _availabilityFilter,
+          underline: const SizedBox(),
+          items: const [
+            DropdownMenuItem(value: 'all', child: Text('All Statuses')),
+            DropdownMenuItem(value: 'available', child: Text('Available')),
+            DropdownMenuItem(value: 'not_available', child: Text('Not Available')),
+          ],
+          onChanged: (val) {
+            setState(() {
+              _availabilityFilter = val ?? 'all';
+            });
+          },
+        ),
       ),
     ];
   }
 
-  Widget _buildResponsiveProductLayout(
+  Widget _buildModernProductLayout(
     bool isMobile,
     bool isTablet,
     List<Product> filteredProducts,
@@ -289,7 +430,13 @@ class _ProductsScreenState extends State<ProductsScreen> {
         padding: const EdgeInsets.all(16),
         itemCount: filteredProducts.length,
         separatorBuilder: (context, i) => const Divider(),
-        itemBuilder: (context, i) => _buildProductListItem(filteredProducts[i]),
+        itemBuilder: (context, i) => _ModernProductCard(
+          product: filteredProducts[i],
+          getCategoryName: _getCategoryName,
+          isMobile: isMobile,
+          onEdit: () => _showEditProductDialog(filteredProducts[i]),
+          onDelete: () => _showDeleteProductDialog(filteredProducts[i]),
+        ),
       );
     } else {
       // Desktop: DataTable
@@ -313,71 +460,6 @@ class _ProductsScreenState extends State<ProductsScreen> {
         ),
       );
     }
-  }
-
-  Widget _buildProductListItem(Product p) {
-    return ListTile(
-      leading: p.imageUrl.isNotEmpty
-          ? Image.network(p.imageUrl, width: 56, height: 56, fit: BoxFit.cover)
-          : const Icon(Icons.image, size: 56),
-      title: Text(p.name),
-      subtitle: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(p.code, style: const TextStyle(fontWeight: FontWeight.bold)),
-          Text(p.description),
-          const SizedBox(height: 4),
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                decoration: BoxDecoration(
-                  color: p.isAvailable ? Colors.green[100] : Colors.red[100],
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Text(
-                  p.isAvailable ? 'Available' : 'Not Available',
-                  style: TextStyle(
-                    color: p.isAvailable ? Colors.green[800] : Colors.red[800],
-                    fontWeight: FontWeight.bold,
-                    fontSize: 12,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 8),
-              Flexible(
-                child: Text(
-                  'Category: ${_getCategoryName(p.categoryId)}',
-                  style: const TextStyle(fontSize: 12),
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-      trailing: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [Text('EGP ${p.price.toStringAsFixed(2)}')],
-          ),
-          const SizedBox(width: 8),
-          IconButton(
-            icon: const Icon(Icons.edit),
-            tooltip: 'Edit',
-            onPressed: () => _showEditProductDialog(p),
-          ),
-          IconButton(
-            icon: const Icon(Icons.delete),
-            tooltip: 'Delete',
-            onPressed: () => _showDeleteProductDialog(p),
-          ),
-        ],
-      ),
-    );
   }
 
   DataRow _buildProductDataRow(Product p) {
