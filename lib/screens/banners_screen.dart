@@ -142,7 +142,6 @@ class _BannersScreenState extends State<BannersScreen> {
                     TextFormField(
                       controller: titleController,
                       decoration: const InputDecoration(labelText: 'Title'),
-                      validator: (v) => v == null || v.isEmpty ? 'Enter title' : null,
                     ),
                     const SizedBox(height: 8),
                     TextFormField(

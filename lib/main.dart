@@ -29,7 +29,9 @@ void main() async {
   runApp(
     MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (_) => AuthProvider(AuthService(supabaseClient))),
+        ChangeNotifierProvider(
+          create: (_) => AuthProvider(AuthService(supabaseClient)),
+        ),
         StreamProvider<List<Order>>(
           create: (_) => Order.ordersStream(),
           initialData: const [],
@@ -43,20 +45,45 @@ void main() async {
 final GoRouter _router = GoRouter(
   routes: [
     GoRoute(path: '/', builder: (context, state) => const DashboardScreen()),
-    GoRoute(path: '/dashboard', builder: (context, state) => const DashboardScreen()),
+    GoRoute(
+      path: '/dashboard',
+      builder: (context, state) => const DashboardScreen(),
+    ),
     GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
     GoRoute(path: '/users', builder: (context, state) => const UsersScreen()),
     GoRoute(path: '/orders', builder: (context, state) => const OrdersScreen()),
-    GoRoute(path: '/categories', builder: (context, state) => const CategoriesScreen()),
-    GoRoute(path: '/products', builder: (context, state) => const ProductsScreen()),
-    GoRoute(path: '/banners', builder: (context, state) => const BannersScreen()),
-    GoRoute(path: '/tickers', builder: (context, state) => const TickersScreen()),
-    GoRoute(path: '/notifications', builder: (context, state) => const NotificationScreen()),
-    GoRoute(path: '/settings', builder: (context, state) => const SettingsScreen()),
-    GoRoute(path: '/support_messages', builder: (context, state) => const SupportMessagesScreen()),
+    GoRoute(
+      path: '/categories',
+      builder: (context, state) => const CategoriesScreen(),
+    ),
+    GoRoute(
+      path: '/products',
+      builder: (context, state) => const ProductsScreen(),
+    ),
+    GoRoute(
+      path: '/banners',
+      builder: (context, state) => const BannersScreen(),
+    ),
+    GoRoute(
+      path: '/tickers',
+      builder: (context, state) => const TickersScreen(),
+    ),
+    GoRoute(
+      path: '/notifications',
+      builder: (context, state) => const NotificationScreen(),
+    ),
+    GoRoute(
+      path: '/settings',
+      builder: (context, state) => const SettingsScreen(),
+    ),
+    GoRoute(
+      path: '/support_messages',
+      builder: (context, state) => const SupportMessagesScreen(),
+    ),
     GoRoute(
       path: '/order_details/:orderId',
-      builder: (context, state) => OrderDetailsScreen(orderId: state.pathParameters['orderId']!),
+      builder: (context, state) =>
+          OrderDetailsScreen(orderId: state.pathParameters['orderId']!),
     ),
   ],
   initialLocation: '/dashboard',
@@ -69,10 +96,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp.router(
       title: 'El Hayes Admin',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-        fontFamily: 'Cairo',
-      ),
+      theme: ThemeData(primarySwatch: Colors.blue, fontFamily: 'Cairo'),
       routerConfig: _router,
       debugShowCheckedModeBanner: false,
     );

@@ -103,6 +103,7 @@ class _SupportMessagesScreenState extends State<SupportMessagesScreen> {
                                     return _ModernSupportMessageCard(
                                       message: message,
                                       isMobile: isMobile,
+                                      onRespond: _respondToMessage,
                                     );
                                   },
                                 ),
@@ -123,7 +124,8 @@ class _SupportMessagesScreenState extends State<SupportMessagesScreen> {
 class _ModernSupportMessageCard extends StatefulWidget {
   final Map<String, dynamic> message;
   final bool isMobile;
-  const _ModernSupportMessageCard({required this.message, required this.isMobile});
+  final Function(String, String) onRespond;
+  const _ModernSupportMessageCard({required this.message, required this.isMobile, required this.onRespond});
 
   @override
   State<_ModernSupportMessageCard> createState() => _ModernSupportMessageCardState();
@@ -131,6 +133,13 @@ class _ModernSupportMessageCard extends StatefulWidget {
 
 class _ModernSupportMessageCardState extends State<_ModernSupportMessageCard> {
   bool _hovering = false;
+  final TextEditingController _responseController = TextEditingController();
+
+  @override
+  void dispose() {
+    _responseController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -157,13 +166,65 @@ class _ModernSupportMessageCardState extends State<_ModernSupportMessageCard> {
             width: 1.1,
           ),
         ),
-        child: ListTile(
-          title: Text(
-            m['subject'] ?? '',
-            style: const TextStyle(fontWeight: FontWeight.bold),
-          ),
-          subtitle: Text(m['body'] ?? ''),
-          trailing: Text(m['created_at'] ?? ''),
+        child: Column(
+          children: [
+            ListTile(
+              title: Text(
+                m['subject'] ?? '',
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+              subtitle: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Message: ' + (m['message'] ?? ''), style: const TextStyle(fontSize: 14)),
+                  const SizedBox(height: 4),
+                  if (m['response_text'] != null && m['response_text'].isNotEmpty)
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Divider(),
+                        Text('Response:', style: const TextStyle(fontWeight: FontWeight.bold)),
+                        Text(m['response_text'], style: const TextStyle(fontSize: 14, color: Colors.blueGrey)),
+                      ],
+                    ),
+                  const SizedBox(height: 4),
+                  Text('Type: ' + (m['type'] ?? ''), style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                  Text('Status: ' + (m['status'] ?? ''), style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                ],
+              ),
+              trailing: Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(m['created_at'] ?? ''),
+                  if (m['responded_at'] != null) Text('Responded: ' + m['responded_at'], style: const TextStyle(fontSize: 12, color: Colors.green)),
+                ],
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Column(
+                children: [
+                  TextField(
+                    controller: _responseController,
+                    decoration: const InputDecoration(
+                      labelText: 'Your Response',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  ElevatedButton(
+                    onPressed: () {
+                      final reply = _responseController.text;
+                      if (reply.isNotEmpty) {
+                        widget.onRespond(m['id'], reply);
+                      }
+                    },
+                    child: const Text('Send Response'),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
     );
