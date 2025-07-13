@@ -30,6 +30,7 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
   String? _status;
   bool _isUpdating = false;
   double? _deliveryFee;
+  double? _discount; // Add this field
 
   @override
   void initState() {
@@ -71,6 +72,7 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
       setState(() {
         _order = orderResp;
         _items = List<Map<String, dynamic>>.from(itemsResp);
+        _discount = double.tryParse(orderResp?['discount']?.toString() ?? '0') ?? 0;
         final validStatuses = ['Delivered', 'Rejected', 'In Progress'];
         final status = orderResp?['status']?.toString();
         _status = validStatuses.contains(status) ? status : 'In Progress';
@@ -113,7 +115,7 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
   }
 
   double get _totalWithDelivery {
-    return _totalPrice + (_deliveryFee ?? 0);
+    return _totalPrice + (_deliveryFee ?? 0) - (_discount ?? 0);
   }
 
   @override
@@ -321,12 +323,20 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
                             pw.Text('EGP ${_deliveryFee!.toStringAsFixed(2)}', style: pw.TextStyle(font: ttf)),
                           ],
                         ),
+                      if (_discount != null && _discount! > 0)
+                        pw.Row(
+                          mainAxisAlignment: pw.MainAxisAlignment.end,
+                          children: [
+                            pw.Text('Discount: ', style: pw.TextStyle(font: ttf, fontWeight: pw.FontWeight.bold)),
+                            pw.Text('-EGP ${_discount!.toStringAsFixed(2)}', style: pw.TextStyle(font: ttf)),
+                          ],
+                        ),
                       pw.Divider(),
                       pw.Row(
                         mainAxisAlignment: pw.MainAxisAlignment.end,
                         children: [
                           pw.Text('Total: ', style: pw.TextStyle(font: ttf, fontWeight: pw.FontWeight.bold, fontSize: 16)),
-                          pw.Text('EGP ${(_totalPrice + (_deliveryFee ?? 0)).toStringAsFixed(2)}', style: pw.TextStyle(font: ttf, fontWeight: pw.FontWeight.bold, fontSize: 16)),
+                          pw.Text('EGP ${(_totalPrice + (_deliveryFee ?? 0) - (_discount ?? 0)).toStringAsFixed(2)}', style: pw.TextStyle(font: ttf, fontWeight: pw.FontWeight.bold, fontSize: 16)),
                         ],
                       ),
                     ],
@@ -546,6 +556,17 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
                   ],
                 ),
               ),
+            if (_discount != null && _discount! > 0)
+              Padding(
+                padding: const EdgeInsets.only(top: 8.0),
+                child: Row(
+                  children: [
+                    Icon(Icons.local_offer, color: Colors.red[700]),
+                    const SizedBox(width: 8),
+                    Text('Discount: -${_discount!.toStringAsFixed(2)} EGP'),
+                  ],
+                ),
+              ),
           ],
         ),
       ),
@@ -715,6 +736,14 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
                 children: [
                   Text('Delivery Fee:', style: theme.textTheme.titleMedium),
                   Text('EGP ${_deliveryFee!.toStringAsFixed(2)}', style: theme.textTheme.titleMedium),
+                ],
+              ),
+            if (_discount != null && _discount! > 0)
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text('Discount:', style: theme.textTheme.titleMedium?.copyWith(color: Colors.red[700])),
+                  Text('-EGP ${_discount!.toStringAsFixed(2)}', style: theme.textTheme.titleMedium?.copyWith(color: Colors.red[700])),
                 ],
               ),
             const Divider(),

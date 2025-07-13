@@ -56,19 +56,19 @@ class _TopSellingProductsTableState extends State<TopSellingProductsTable> {
     final double titleFontSize = 18;
     final double containerPadding = 16;
     return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
             color: Colors.black.withOpacity(0.05),
             blurRadius: 10,
             offset: const Offset(0, 5),
-          ),
-        ],
-      ),
+                  ),
+                ],
+              ),
       margin: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
-      padding: EdgeInsets.all(containerPadding),
+              padding: EdgeInsets.all(containerPadding),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
@@ -119,8 +119,8 @@ class _TopSellingProductsTableState extends State<TopSellingProductsTable> {
                           'EGP ${p['total_sales'].toStringAsFixed(2)}'),
                     ],
                   ),
-                ),
-              );
+            ),
+          );
             },
           ),
         ],
@@ -159,13 +159,13 @@ class _TopSellingProductsTableState extends State<TopSellingProductsTable> {
     final double verticalPadding = isTablet ? 8 : 14;
     final double horizontalPadding = isTablet ? 4 : 8;
 
-    Widget table = Table(
-      columnWidths: const {
-        0: FlexColumnWidth(2), // Product Name
+        Widget table = Table(
+          columnWidths: const {
+            0: FlexColumnWidth(2), // Product Name
         1: FlexColumnWidth(), // Product Code
         2: FlexColumnWidth(), // Units Sold
         3: FlexColumnWidth(), // Revenue
-      },
+          },
       border: TableBorder(
           horizontalInside: BorderSide(color: Colors.grey[300]!, width: 0.5)),
       children: [
@@ -177,7 +177,7 @@ class _TopSellingProductsTableState extends State<TopSellingProductsTable> {
           children: [
             ...['Product', 'Code', 'Units Sold', 'Revenue (EGP)']
                 .map((header) => Padding(
-                      padding: EdgeInsets.all(tableHeaderPadding),
+                  padding: EdgeInsets.all(tableHeaderPadding),
                       child: Text(
                         header,
                         textAlign: TextAlign.center,
@@ -186,19 +186,19 @@ class _TopSellingProductsTableState extends State<TopSellingProductsTable> {
                             fontSize: headerFontSize,
                             fontFamily: 'Cairo',
                             color: const Color(0xFF22223b)),
-                      ),
+                ),
                     ))
                 .toList(),
-          ],
-        ),
-        ..._topProducts.asMap().entries.map((entry) {
-          final i = entry.key;
-          final p = entry.value;
-          return TableRow(
+              ],
+            ),
+            ..._topProducts.asMap().entries.map((entry) {
+              final i = entry.key;
+              final p = entry.value;
+              return TableRow(
             decoration: BoxDecoration(
                 color: i % 2 == 0 ? Colors.white : Colors.grey[50]),
-            children: [
-              Padding(
+                children: [
+                  Padding(
                 padding: EdgeInsets.symmetric(
                     vertical: verticalPadding, horizontal: horizontalPadding),
                 child: Text(p['name'] ?? 'Unknown',
@@ -207,71 +207,71 @@ class _TopSellingProductsTableState extends State<TopSellingProductsTable> {
                         fontSize: cellFontSize,
                         fontWeight: FontWeight.w600,
                         fontFamily: 'Cairo')),
-              ),
-              Padding(
+                  ),
+                  Padding(
                 padding: EdgeInsets.symmetric(
                     vertical: verticalPadding, horizontal: horizontalPadding),
                 child: Text(p['code']?.toString() ?? '-',
                     textAlign: TextAlign.center,
                     style: TextStyle(
                         fontSize: cellFontSize, fontFamily: 'Cairo')),
-              ),
-              Padding(
+                  ),
+                  Padding(
                 padding: EdgeInsets.symmetric(
                     vertical: verticalPadding, horizontal: horizontalPadding),
                 child: Text('${p['total_quantity_sold']}',
                     textAlign: TextAlign.center,
                     style: TextStyle(
                         fontSize: cellFontSize, fontFamily: 'Cairo')),
-              ),
-              Padding(
+                  ),
+                  Padding(
                 padding: EdgeInsets.symmetric(
                     vertical: verticalPadding, horizontal: horizontalPadding),
                 child: Text('EGP ${p['total_sales'].toStringAsFixed(2)}',
                     textAlign: TextAlign.center,
                     style: TextStyle(
                         fontSize: cellFontSize, fontFamily: 'Cairo')),
-              ),
-            ],
-          );
-        }).toList(),
-      ],
-    );
+                  ),
+                ],
+              );
+            }).toList(),
+          ],
+        );
 
     return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
             color: Colors.black.withOpacity(0.05),
             blurRadius: 10,
             offset: const Offset(0, 5),
-          ),
-        ],
-      ),
-      margin: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
-      padding: EdgeInsets.all(containerPadding),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Padding(
-            padding: EdgeInsets.only(bottom: isTablet ? 12 : 18),
-            child: Center(
-              child: Text(
-                'Top Selling Products',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: titleFontSize,
-                  fontFamily: 'Cairo',
-                ),
-                textAlign: TextAlign.center,
+                  ),
+                ],
               ),
-            ),
-          ),
-          table,
-        ],
-      ),
+      margin: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
+              padding: EdgeInsets.all(containerPadding),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Padding(
+            padding: EdgeInsets.only(bottom: isTablet ? 12 : 18),
+                    child: Center(
+                      child: Text(
+                        'Top Selling Products',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: titleFontSize,
+                          fontFamily: 'Cairo',
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  ),
+                    table,
+                ],
+              ),
     );
   }
 } 

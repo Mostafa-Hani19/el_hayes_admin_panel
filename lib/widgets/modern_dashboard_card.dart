@@ -18,8 +18,8 @@ class ModernDashboardCard extends StatefulWidget {
     required this.onTap,
     this.percentage,
     required this.isIncrease,
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   State<ModernDashboardCard> createState() => _ModernDashboardCardState();

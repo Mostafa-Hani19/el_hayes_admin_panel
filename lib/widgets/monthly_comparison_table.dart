@@ -119,7 +119,7 @@ class MonthlyComparisonTable extends StatelessWidget {
                                   color: Colors.blueGrey[700]),
                             ),
                           ))
-                      .toList(),
+                      ,
                 ],
               ),
               // Orders row
