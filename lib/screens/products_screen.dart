@@ -64,22 +64,6 @@ class _ModernProductCardState extends State<_ModernProductCard> {
               const SizedBox(height: 4),
               Row(
                 children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: p.isAvailable ? Colors.green[100] : Colors.red[100],
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text(
-                      p.isAvailable ? 'Available' : 'Not Available',
-                      style: TextStyle(
-                        color: p.isAvailable ? Colors.green[800] : Colors.red[800],
-                        fontWeight: FontWeight.bold,
-                        fontSize: 12,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
                   Flexible(
                     child: Text(
                       'Category: ${widget.getCategoryName(p.categoryId)}',
@@ -133,7 +117,6 @@ class _ProductsScreenState extends State<ProductsScreen> {
   String? _error;
   String _searchQuery = '';
   String _categoryFilter = 'all';
-  String _availabilityFilter = 'all';
 
   @override
   void initState() {
@@ -203,11 +186,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
           p.code.toLowerCase().contains(_searchQuery);
       final matchesCategory =
           _categoryFilter == 'all' || p.categoryId == _categoryFilter;
-      final matchesAvailability =
-          _availabilityFilter == 'all' ||
-          (_availabilityFilter == 'available' && p.isAvailable) ||
-          (_availabilityFilter == 'not_available' && !p.isAvailable);
-      return matchesSearch && matchesCategory && matchesAvailability;
+      return matchesSearch && matchesCategory;
     }).toList();
   }
 
@@ -394,29 +373,6 @@ class _ProductsScreenState extends State<ProductsScreen> {
           },
         ),
       ),
-      SizedBox(width: isMobile ? 8 : 16),
-      Container(
-        decoration: BoxDecoration(
-          color: Colors.grey[50],
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.grey[300]!),
-        ),
-        padding: const EdgeInsets.symmetric(horizontal: 8),
-        child: DropdownButton<String>(
-          value: _availabilityFilter,
-          underline: const SizedBox(),
-          items: const [
-            DropdownMenuItem(value: 'all', child: Text('All Statuses')),
-            DropdownMenuItem(value: 'available', child: Text('Available')),
-            DropdownMenuItem(value: 'not_available', child: Text('Not Available')),
-          ],
-          onChanged: (val) {
-            setState(() {
-              _availabilityFilter = val ?? 'all';
-            });
-          },
-        ),
-      ),
     ];
   }
 
@@ -452,7 +408,6 @@ class _ProductsScreenState extends State<ProductsScreen> {
               DataColumn(label: Text('Description')),
               DataColumn(label: Text('Category')),
               DataColumn(label: Text('Price')),
-              DataColumn(label: Text('Status')),
               DataColumn(label: Text('Actions')),
             ],
             rows: filteredProducts.map((p) => _buildProductDataRow(p)).toList(),
@@ -480,23 +435,6 @@ class _ProductsScreenState extends State<ProductsScreen> {
         DataCell(Text(p.description)),
         DataCell(Text(_getCategoryName(p.categoryId))),
         DataCell(Text('EGP ${p.price.toStringAsFixed(2)}')),
-        DataCell(
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-            decoration: BoxDecoration(
-              color: p.isAvailable ? Colors.green[100] : Colors.red[100],
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Text(
-              p.isAvailable ? 'Available' : 'Not Available',
-              style: TextStyle(
-                color: p.isAvailable ? Colors.green[800] : Colors.red[800],
-                fontWeight: FontWeight.bold,
-                fontSize: 12,
-              ),
-            ),
-          ),
-        ),
         DataCell(
           Row(
             mainAxisSize: MainAxisSize.min,
@@ -653,25 +591,6 @@ class _ProductsScreenState extends State<ProductsScreen> {
                         validator: (val) =>
                             val == null ? 'Select category' : null,
                       ),
-                      const SizedBox(height: 12),
-                      DropdownButtonFormField<bool>(
-                        value: isAvailable,
-                        decoration: const InputDecoration(
-                          labelText: 'Availability Status',
-                        ),
-                        items: const [
-                          DropdownMenuItem(
-                            value: true,
-                            child: Text('Available'),
-                          ),
-                          DropdownMenuItem(
-                            value: false,
-                            child: Text('Not Available'),
-                          ),
-                        ],
-                        onChanged: (val) =>
-                            setState(() => isAvailable = val ?? true),
-                      ),
                     ],
                   ),
                 ),
@@ -715,7 +634,6 @@ class _ProductsScreenState extends State<ProductsScreen> {
                                 'image_url': imageUrl,
                                 'price': double.parse(priceController.text),
                                 'category_id': selectedCategoryId,
-                                'is_available': isAvailable,
                                 'code': codeController.text,
                               });
                               if (mounted) {
@@ -901,25 +819,6 @@ class _ProductsScreenState extends State<ProductsScreen> {
                         validator: (val) =>
                             val == null ? 'Select category' : null,
                       ),
-                      const SizedBox(height: 12),
-                      DropdownButtonFormField<bool>(
-                        value: isAvailable,
-                        decoration: const InputDecoration(
-                          labelText: 'Availability Status',
-                        ),
-                        items: const [
-                          DropdownMenuItem(
-                            value: true,
-                            child: Text('Available'),
-                          ),
-                          DropdownMenuItem(
-                            value: false,
-                            child: Text('Not Available'),
-                          ),
-                        ],
-                        onChanged: (val) =>
-                            setState(() => isAvailable = val ?? true),
-                      ),
                     ],
                   ),
                 ),
@@ -964,7 +863,6 @@ class _ProductsScreenState extends State<ProductsScreen> {
                                     'image_url': imageUrl,
                                     'price': double.parse(priceController.text),
                                     'category_id': selectedCategoryId,
-                                    'is_available': isAvailable,
                                     'code': codeController.text,
                                   })
                                   .eq('id', product.id)

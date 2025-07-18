@@ -162,6 +162,13 @@ class SidebarMenu extends StatelessWidget {
                   ),
                   _buildMenuItem(
                     context,
+                    icon: Icons.store,
+                    title: 'Branches',
+                    route: '/branches',
+                    isActive: currentRoute == '/branches',
+                  ),
+                  _buildMenuItem(
+                    context,
                     icon: Icons.photo_library,
                     title: 'Banners',
                     route: '/banners',

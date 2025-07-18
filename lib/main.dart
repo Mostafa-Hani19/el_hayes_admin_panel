@@ -18,6 +18,7 @@ import 'screens/support_messages_screen.dart';
 import 'screens/login_screen.dart';
 import 'models/order_model.dart';
 import 'screens/order_details_screen.dart';
+import 'screens/branches_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -79,6 +80,10 @@ final GoRouter _router = GoRouter(
     GoRoute(
       path: '/support_messages',
       builder: (context, state) => const SupportMessagesScreen(),
+    ),
+    GoRoute(
+      path: '/branches',
+      builder: (context, state) => const BranchesScreen(),
     ),
     GoRoute(
       path: '/order_details/:orderId',
